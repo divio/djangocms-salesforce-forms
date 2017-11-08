@@ -1,0 +1,62 @@
+{% load i18n cms_tags sekizai_tags %}
+<form method="post" action="{{ action_url }}"
+      id="form-{{ instance.pk }}" name="subscribeForm"
+        {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
+        {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
+        {% if instance.custom_classes %} class="{{ instance.custom_classes }}"{% endif %}>
+    <input type="hidden" name="_clientID" value="{{ client_id }}">
+    <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
+    <input type="hidden" name="_successURL" value="{{ success_url }}">
+    <input type="hidden" name="_errorURL" value="{{ error_url }}">
+    <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
+    <input type="hidden" name="_action" value="add">
+    <input type="hidden" name="_returnXML" value="0">
+    <input type="hidden" name="SubscriberKey" id="SubscriberKey">
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+    <div class="field hs-form-field hs_email">
+        <label for="id_organization">
+            <span>Email</span>
+            <span class="hs-form-required">*</span>
+        </label>
+        <div class="input">
+            <input id="id_email" required type="email" name="EmailAddress"
+                   onchange="document.getElementById('SubscriberKey').value=this.value">
+        </div>
+    </div>
+
+    {% if form_success_url %}
+        <p>
+            {% blocktrans %}
+                Thank you for submitting your information, you will be
+                <a href="{{ form_success_url }}">redirected shortly</a>.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+
+    {% if not form_success_url %}
+        {% for plugin in instance.child_plugin_instances %}
+            {% render_plugin plugin %}
+        {% endfor %}
+    {% endif %}
+
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}
+        {{ field }}
+    {% endfor %}
+</form>
+
+{# INFO: this solution is currently required because we can't redirect from a plugin. #}
+{% if form_success_url %}
+    {% addtoblock "js" %}
+        <script>
+            setTimeout(function () {
+                window.location.href = '{{ form_success_url }}';
+            }, 2000);
+        </script>
+    {% endaddtoblock %}
+{% endif %}
