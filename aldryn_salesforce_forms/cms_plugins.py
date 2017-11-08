@@ -14,7 +14,6 @@ from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
 from .forms import FormPluginForm, RadioFieldForm, SelectFieldForm, BooleanFieldForm, TextAreaFieldForm, \
     TextFieldForm, FormSubmissionBaseForm, MultipleSelectFieldForm
-from settings import CSV_DATA_DIR
 
 from csv import reader as csv_reader
 
@@ -611,6 +610,10 @@ plugin_pool.register_plugin(TextAreaField)
 plugin_pool.register_plugin(TextField)
 plugin_pool.register_plugin(MultipleCheckboxSelectField)
 
+
+CSV_DATA_DIR = os.path.join(os.path.dirname(models.__file__), 'csvdata/')
+
 for element in os.listdir(CSV_DATA_DIR):
     if os.path.splitext(element)[1] == '.csv':
         register_csv_based_select_field(CSV_DATA_DIR + element)
+
