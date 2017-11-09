@@ -162,18 +162,6 @@ class FormPlugin(CMSPlugin):
     def __str__(self):
         return self.name
 
-    def get_submit_button(self):
-        from .cms_plugins import SubmitButton
-
-        form_elements = self.get_form_elements()
-
-        for element in form_elements:
-            plugin_class = element.get_plugin_class()
-
-            if issubclass(plugin_class, SubmitButton):
-                return element
-        return
-
     def get_form_fields(self):
         from .cms_plugins import Field
 

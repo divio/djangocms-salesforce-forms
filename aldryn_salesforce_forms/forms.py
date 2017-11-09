@@ -1,28 +1,13 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.conf import settings
-from django.forms.forms import NON_FIELD_ERRORS
 from django.utils.translation import ugettext_lazy as _
 
-from requests.exceptions import HTTPError
-
-import logging
-
-import settings
-
-from idexx_salesforce.helpers import get_access_token
-from idexx_salesforce.api import send_user_event
-from idexx_salesforce.exceptions import InvalidAccessToken
-
 from .models import FormPlugin
-
-logger = logging.getLogger('aldryn_salesforce_forms')
+from .utils import add_form_error
 
 
 class FormSubmissionBaseForm(forms.Form):
-
-    # these fields are internal.
-    # by default we ignore all hidden fields when saving form data to db.
     language = forms.ChoiceField(
         choices=settings.LANGUAGES,
         widget=forms.HiddenInput()
@@ -36,98 +21,6 @@ class FormSubmissionBaseForm(forms.Form):
         language = self.form_plugin.language
         self.fields['language'].initial = language
         self.fields['form_plugin_id'].initial = self.form_plugin.pk
-
-    def _add_error(self, message, field=NON_FIELD_ERRORS):
-        try:
-            self._errors[field].append(message)
-        except KeyError:
-            self._errors[field] = self.error_class([message])
-
-    def get_serialized_fields(self, is_confirmation=False):
-        """
-        The `is_confirmation` flag indicates if the data will be used in a
-        confirmation email sent to the user submitting the form or if it will be
-        used to render the data for the recipients/admin site.
-        """
-        for field in self.form_plugin.get_form_fields():
-            plugin = field.plugin_instance.get_plugin_class_instance()
-            # serialize_field can be None or SerializedFormField  namedtuple instance.
-            # if None then it means we shouldn't serialize this field.
-            serialized_field = plugin.serialize_field(self, field, is_confirmation)
-
-            if serialized_field:
-                yield serialized_field
-
-    def get_serialized_field_choices(self, is_confirmation=False):
-        """Renders the form data in a format suitable to be serialized.
-        """
-        fields = self.get_serialized_fields(is_confirmation)
-        fields = [(field.label, field.value) for field in fields]
-        return fields
-
-    def get_cleaned_data(self, is_confirmation=False):
-        fields = self.get_serialized_fields(is_confirmation)
-        form_data = dict((field.name, field.value) for field in fields)
-        return form_data
-
-    def save(self, commit=False):
-        pass
-        # self.instance.set_form_data(self)
-        # self.instance.save()
-
-    def get_salesforce_data(self):
-        clean_data = self.cleaned_data
-        # email = clean_data[self.email_field]
-        email = settings.SALESFORCE_SUBSCRIBER_EMAIL
-        data = {
-            'EmailAddress': email,
-            'SubscriberKey': email,
-            'Name of Form': self.form_plugin.name,
-        }
-
-        for form_field in self.form_plugin.get_form_fields():
-            print('Form field', form_field)
-            print('Form field plugin', form_field.plugin_instance.name)
-            print('Form field name', form_field.name)
-            print('Form field cleaned value', clean_data.get(form_field.name, ''))
-            field_plugin_instance = form_field.plugin_instance
-            data[field_plugin_instance.name] = clean_data.get(form_field.name, '').__str__()
-
-        return data
-
-    def send_to_salesforce(self):
-        data = self.get_salesforce_data()
-
-        print("Data to send to Salesforce = ", data)  # DEBUG!
-
-        access_token = get_access_token()
-
-        print("Access token = ", access_token)  # DEBUG!
-
-        if not access_token:
-            message = ('Failed to send form data for {} form. '
-                       'No access token available'.format(self.form_plugin.name))
-            logger.warning(message)
-            return
-
-        try:
-            send_user_event(
-                access_token=access_token,
-                user_id=data['EmailAddress'],
-                event_id=self.form_plugin.name,
-                data=data,
-            )
-        except InvalidAccessToken:
-            message = ('Failed to send form data for {} form. '
-                       'Invalid access token'.format(self.form_plugin.name))
-            logger.warning(message)
-        except HTTPError:
-            message = ('Failed to send form data for {} form. '
-                       'HTTPError'.format(self.form_plugin.name))
-            logger.warning(message)
-        else:
-            message = 'Sent form data for {} form. '.format(self.form_plugin.name)
-            logger.info(message)
 
 
 class ExtandableErrorForm(forms.ModelForm):
@@ -236,10 +129,3 @@ class MultipleSelectFieldForm(MinMaxValueForm):
     class Meta:
         # 'required' and 'required_message' depend on min_value field validator
         fields = ['label', 'help_text', 'min_value', 'max_value', 'custom_classes']
-
-
-def add_form_error(form, message, field=NON_FIELD_ERRORS):
-    try:
-        form._errors[field].append(message)
-    except KeyError:
-        form._errors[field] = form.error_class([message])

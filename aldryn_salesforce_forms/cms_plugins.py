@@ -323,13 +323,6 @@ class Field(FormElement):
         ]
         return template_names
 
-    # hooks to allow processing of form data per field
-    def form_pre_save(self, instance, form, **kwargs):
-        pass
-
-    def form_post_save(self, instance, form, **kwargs):
-        pass
-
 
 class AbstractTextField(Field):
     form_field = forms.CharField
