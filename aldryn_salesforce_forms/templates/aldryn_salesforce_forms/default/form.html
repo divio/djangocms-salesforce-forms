@@ -1,33 +1,47 @@
 {% load i18n cms_tags sekizai_tags %}
-<form method="post" action="{{ action_url }}"
-      id="form-{{ instance.pk }}" name="subscribeForm"
-        {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
-        {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
-        {% if instance.custom_classes %} class="{{ instance.custom_classes }}"{% endif %}>
+<form
+    method="post" action="{{ action_url }}"
+    id="form-{{ instance.pk }}"
+    role="form"
+    {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
+    {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
+    class="form {{ instance.custom_classes }}">
     <input type="hidden" name="_clientID" value="{{ client_id }}">
     <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
     <input type="hidden" name="_successURL" value="{{ success_url }}">
     <input type="hidden" name="_errorURL" value="{{ error_url }}">
-    <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
+    {% if instance.use_webcollect %}
+        <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
+        <input type="hidden" name="SubscriberKey" id="SubscriberKey">
+        {% addtoblock "js" %}
+            <script defer>
+                var email = document.getElementById('id_EmailAddress');
+                email.onchange = function () {
+                    document.getElementById('SubscriberKey').value = this.value;
+                }
+            </script>
+        {% endaddtoblock %}
+    {% endif %}
     <input type="hidden" name="_action" value="add">
     <input type="hidden" name="_returnXML" value="0">
-    <input type="hidden" name="SubscriberKey" id="SubscriberKey">
 
     {% if form.non_field_errors %}
         {% for error in form.non_field_errors %}
             <p>{{ error }}</p>
         {% endfor %}
     {% endif %}
-    <div class="field hs-form-field hs_email">
-        <label for="id_organization">
-            <span>Email</span>
-            <span class="hs-form-required">*</span>
-        </label>
-        <div class="input">
-            <input id="id_email" required type="email" name="EmailAddress"
-                   onchange="document.getElementById('SubscriberKey').value=this.value">
+    {% if instance.use_webcollect and 0 %}
+        <div class="field hs-form-field hs_email">
+            <label for="id_organization">
+                <span>Email</span>
+                <span class="hs-form-required">*</span>
+            </label>
+            <div class="input">
+                <input id="id_email" required type="email" name="EmailAddress"
+                       onchange="document.getElementById('SubscriberKey').value=this.value">
+            </div>
         </div>
-    </div>
+    {% endif %}
 
     {% if form_success_url %}
         <p>
@@ -43,8 +57,9 @@
             {% render_plugin plugin %}
         {% endfor %}
     {% endif %}
-
-    {% csrf_token %}
+    {% if not instance.use_webcollect %}
+        {% csrf_token %}
+    {% endif %}
     {% for field in form.hidden_fields %}
         {{ field }}
     {% endfor %}

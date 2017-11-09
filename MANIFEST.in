@@ -1,0 +1,2 @@
+recursive-include aldryn_salesforce_forms/templates *
+recursive-include aldryn_salesforce_forms/locale *

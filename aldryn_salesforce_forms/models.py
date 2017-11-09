@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cms.models import CMSPlugin
 from cms.models.fields import PageField
 from django.db import models
@@ -98,11 +99,16 @@ class FormPlugin(CMSPlugin):
         help_text=_('Used to name the form instance.')
     )
     form_name = models.CharField(
-        verbose_name=_('Form Name'),
+        verbose_name=_('Name of Form'),
         max_length=255,
-        help_text=_('Optional. Used to put a name on form tag.'),
+        help_text=_('Optional. Used as the value of the hidden "Name of Form" field.'),
         blank=True,
         null=True
+    )
+    custom_classes = models.CharField(
+        verbose_name=_('custom css classes'),
+        max_length=255,
+        blank=True,
     )
     form_attributes = AttributesField(
         verbose_name=_('Attributes'),
@@ -142,6 +148,7 @@ class FormPlugin(CMSPlugin):
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
+
 
     def __str__(self):
         return self.name
@@ -187,13 +194,17 @@ class FormPlugin(CMSPlugin):
 
             field_type_occurrence = field_type_occurrences[field_type]
 
-            field_name = u'{0}_{1}'.format(field_type, field_type_occurrence)
+            field_name = (
+                getattr(field_plugin, 'name', None) or
+                u'{0}_{1}'.format(field_type, field_type_occurrence)
+            )
             field_label = field_plugin.get_label()
 
             if field_label:
                 field_id = u'{0}_{1}'.format(field_type, field_label)
             else:
                 field_id = field_name
+            field_id = field_id.replace(' ', '_')
 
             if field_id in field_occurrences:
                 field_occurrences[field_id] += 1
@@ -257,6 +268,16 @@ class FormPlugin(CMSPlugin):
         return self._form_elements
 
 
+class FieldsetPlugin(CMSPlugin):
+
+    legend = models.CharField(_('Legend'), max_length=255, blank=True)
+    custom_classes = models.CharField(
+        verbose_name=_('custom css classes'), max_length=255, blank=True)
+
+    def __str__(self):
+        return self.legend or str(self.pk)
+
+
 class FieldPluginBase(CMSPlugin):
     label = models.CharField(_('Label'), max_length=255, blank=True)
     required = models.BooleanField(_('Field is required'), default=False)
@@ -265,7 +286,8 @@ class FieldPluginBase(CMSPlugin):
         max_length=255,
         help_text=_('Used to set the field name'),
         blank=False,
-        null=False)
+        null=False,
+    )
     template_set = models.CharField(
         verbose_name=_('Template'),
         choices=FORM_TEMPLATE_SET,
@@ -290,6 +312,12 @@ class FieldPluginBase(CMSPlugin):
         blank=True,
         help_text=_('Default text in a form. Disappears when user starts '
                     'typing. Example: "email@example.com"')
+    )
+    initial_value = models.CharField(
+        verbose_name=_('Initial value'),
+        max_length=255,
+        blank=True,
+        help_text=_('Default value of field.')
     )
     help_text = models.TextField(
         verbose_name=_('Help text'),
@@ -355,6 +383,9 @@ class TextFieldPlugin(FieldPluginBase):
         ('hidden', _('Hidden')),
     )
     type = models.CharField(_('Type'), max_length=30, choices=TEXT_TYPES, default=TEXT_TYPES[0][0])
+
+    def __str__(self):
+        return '{}: {}'.format(self.type, self.name)
 
 
 class TextAreaFieldPlugin(FieldPluginBase):

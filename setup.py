@@ -4,7 +4,7 @@ import aldryn_salesforce_forms
 
 
 setup(
-    name='idexx-salesforce',
+    name='aldryn-salesforce-forms',
     packages=find_packages(),
     include_package_data=True,
     version=aldryn_salesforce_forms.__version__,
@@ -17,6 +17,9 @@ setup(
         'Topic :: Software Development'
     ],
     install_requires=[],
+    # python 3.5 and up. But not python 4.
+    # https://packaging.python.org/tutorials/distributing-packages/#python-requires
+    python_requires='~=3.5',
     author='Divio AG',
     author_email='info@divio.ch',
     url='http://github.com/divio/aldryn-salesforce-forms',

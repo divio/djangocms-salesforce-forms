@@ -129,6 +129,26 @@ class FormPlugin(FieldContainer):
         messages.success(request, message)
 
 
+class Fieldset(FieldContainer):
+    render_template = 'aldryn_salesforce_forms/fieldset.html'
+    name = _('Fieldset')
+    model = models.FieldsetPlugin
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'legend',
+            )
+        }),
+        (_('Advanced Settings'), {
+            'classes': ('collapse',),
+            'fields': (
+                'custom_classes',
+            )
+        }),
+    )
+
+
 class Field(FormElement):
     module = _('Salesforce Form fields')
     # template name is calculated based on field
@@ -143,7 +163,12 @@ class Field(FormElement):
 
     # Used to configure default fieldset in admin form
     fieldset_general_fields = [
-        'label', 'name', 'type', 'placeholder_text', 'required',
+        'label',
+        'name',
+        'type',
+        'placeholder_text',
+        'initial_value',
+        'required',
     ]
     fieldset_advanced_fields = [
         'attributes',
@@ -383,22 +408,23 @@ class TextAreaField(AbstractTextField):
 
 
 class BooleanField(Field):
-    # checkbox field
-    # I add the above because searching for "checkbox" should give me this plugin :)
-    name = _('Yes/No Field')
+    name = _('Yes/No Field (checkbox)')
 
     form = BooleanFieldForm
     form_field = forms.BooleanField
     form_field_widget = form_field.widget
     form_field_enabled_options = [
         'label',
+        'name',
         'attributes',
         'help_text',
         'required',
         'error_messages',
     ]
     fieldset_general_fields = [
-        'label', 'required',
+        'label',
+        'name',
+        'required',
     ]
     fieldset_advanced_fields = [
         'attributes',
@@ -602,6 +628,7 @@ def register_csv_based_select_field(csv_file_path):
 
 
 plugin_pool.register_plugin(FormPlugin)
+plugin_pool.register_plugin(Fieldset)
 plugin_pool.register_plugin(BooleanField)
 plugin_pool.register_plugin(RadioSelectField)
 plugin_pool.register_plugin(SelectField)

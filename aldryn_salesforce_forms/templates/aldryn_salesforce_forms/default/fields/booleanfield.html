@@ -1,1 +1,26 @@
-{% extends "aldryn_salesforce_forms/default/field.html" %}
+{% load i18n aldryn_salesforce_forms_tags %}
+
+{% if field %}
+    <div class="checkbox{% if field.field.required %} form-required{% endif %}{% if field.errors %} has-error{% endif %}">
+        {% block form_field_label %}
+            <label for="{{ field.auto_id }}" class="checkbox-label">
+                {% block form_field %}
+                    {% render_form_widget field class=instance.custom_classes %}
+                {% endblock form_field %}
+                <span class="checkbox-inner">
+                    <span class="checkbox-visual">
+                        {% include 'includes/icon.html' with icon='checkmark' %}
+                    </span>
+                    <span class="checkbox-label-text">{{ field.label }}</span>
+                </span>
+            </label>
+        {% endblock form_field_label %}
+        {% block form_field_errors %}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        {% endblock form_field_errors %}
+    </div>
+{% endif %}
