@@ -1,4 +1,4 @@
-{% load i18n cms_tags sekizai_tags %}
+{% load i18n staticfiles cms_tags sekizai_tags %}
 
 {% if form_success %}
     <div class="submitted-message">
@@ -65,4 +65,42 @@
             <input type="hidden" name="{{ name }}" value="{{ value }}" />
         {% endfor %}
     </form>
+    {% comment %}
+    {% addtoblock "js" %}<script src="{% static 'js/jquery-2.2.4.min.js' %}"></script>{% endaddtoblock %}
+    {% addtoblock "js" %}<script src="{% static 'js/jquery.validate.min.js' %}"></script>{% endaddtoblock %}
+    {% addtoblock "js" %}
+    <script type="text/javascript">
+        $.validator.addMethod( "pattern", function( value, element, param ) {
+            if ( this.optional( element ) ) {
+                return true;
+            }
+            if ( typeof param === "string" ) {
+                param = new RegExp( "^(?:" + param + ")$" );
+            }
+            return param.test( value );
+        }, "Invalid format." );
+        $.validator.messages['required'] = 'Please complete this mandatory field.';
+        $(function () {
+            $('.js-form-{{ instance.pk }}').validate({
+                messages: {
+                    'Phone Number': {
+                        pattern: 'Must be a valid phone number.  Must contain only numbers, +()-. and x.'
+                    }
+                },
+                rules: {
+                    'Phone Number': {
+                        required: true,
+                        pattern: '[\\d+\\-\\(\\)x]+'
+                    }
+                },
+                errorPlacement: function(error, element) {
+                    var errorWrapper = error.wrap('<ul class="hs-error-msgs inputs-list"><li></li></ul>').closest('ul');
+
+                    element.closest('div').after(errorWrapper)
+                }
+            });
+        });
+    </script>
+    {% endaddtoblock %}
+    {% endcomment %}
 {% endif %}
