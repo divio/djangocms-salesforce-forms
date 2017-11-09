@@ -105,6 +105,15 @@ class FormPlugin(CMSPlugin):
         blank=True,
         null=True
     )
+    external_key = models.CharField(
+        verbose_name=_('External Key'),
+        max_length=255,
+        help_text=_(
+            'DEManager External Key to use for the submission '
+            '(_deExternalKey field)'
+        ),
+        default='Form_Submission_Data',
+    )
     custom_classes = models.CharField(
         verbose_name=_('custom css classes'),
         max_length=255,

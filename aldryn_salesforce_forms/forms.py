@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 from django import forms
 from django.conf import settings
 from django.forms.forms import NON_FIELD_ERRORS
 from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import force_text
 
 from requests.exceptions import HTTPError
 

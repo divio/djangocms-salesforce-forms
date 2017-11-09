@@ -10,18 +10,16 @@
     <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
     <input type="hidden" name="_successURL" value="{{ success_url }}">
     <input type="hidden" name="_errorURL" value="{{ error_url }}">
-    {% if instance.use_webcollect %}
-        <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
-        <input type="hidden" name="SubscriberKey" id="SubscriberKey">
-        {% addtoblock "js" %}
-            <script defer>
-                var email = document.getElementById('id_EmailAddress');
-                email.onchange = function () {
-                    document.getElementById('SubscriberKey').value = this.value;
-                }
-            </script>
-        {% endaddtoblock %}
-    {% endif %}
+    <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
+    <input type="hidden" name="SubscriberKey" id="SubscriberKey">
+    {% addtoblock "js" %}
+        <script defer>
+            var email = document.getElementById('id_EmailAddress');
+            email.onchange = function () {
+                document.getElementById('SubscriberKey').value = this.value;
+            }
+        </script>
+    {% endaddtoblock %}
     <input type="hidden" name="_action" value="add">
     <input type="hidden" name="_returnXML" value="0">
 
@@ -29,18 +27,6 @@
         {% for error in form.non_field_errors %}
             <p>{{ error }}</p>
         {% endfor %}
-    {% endif %}
-    {% if instance.use_webcollect and 0 %}
-        <div class="field hs-form-field hs_email">
-            <label for="id_organization">
-                <span>Email</span>
-                <span class="hs-form-required">*</span>
-            </label>
-            <div class="input">
-                <input id="id_email" required type="email" name="EmailAddress"
-                       onchange="document.getElementById('SubscriberKey').value=this.value">
-            </div>
-        </div>
     {% endif %}
 
     {% if form_success_url %}
@@ -56,9 +42,6 @@
         {% for plugin in instance.child_plugin_instances %}
             {% render_plugin plugin %}
         {% endfor %}
-    {% endif %}
-    {% if not instance.use_webcollect %}
-        {% csrf_token %}
     {% endif %}
     {% for field in form.hidden_fields %}
         {{ field }}

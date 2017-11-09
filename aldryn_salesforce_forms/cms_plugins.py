@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
@@ -39,9 +40,9 @@ class FormPlugin(FieldContainer):
         request = context['request']
 
         form = self.process_form(instance, request)
-        context['action_url'] = getattr(settings, 'SALESFORCE_WEBCOLLECT_URL', 'https://cl.exct.net/DEManager.aspx')
-        context['client_id'] = getattr(settings, 'SALESFORCE_SANDBOX_CUSTOMER_ID', '')
-        context['external_key'] = getattr(settings, 'SALESFORCE_SANDBOX_LIST_ID', 'Form_Submission_Data')
+        context['action_url'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
+        context['client_id'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_CLIENT_ID', '')
+        context['external_key'] = instance.external_key
         context['error_url'] = request.build_absolute_uri(request.path)
         context['success_url'] = '{}?success=1'.format(request.build_absolute_uri(request.path))
         context['form'] = form
