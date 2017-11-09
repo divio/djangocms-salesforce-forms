@@ -34,12 +34,6 @@ class FormSubmissionBaseForm(forms.Form):
         self.request = kwargs.pop('request')
         super(FormSubmissionBaseForm, self).__init__(*args, **kwargs)
         language = self.form_plugin.language
-
-        # self.instance = FormSubmission(
-        #     name=self.form_plugin.name,
-        #     language=language,
-        #     form_url=self.request.build_absolute_uri(self.request.path),
-        # )
         self.fields['language'].initial = language
         self.fields['form_plugin_id'].initial = self.form_plugin.pk
 
@@ -99,10 +93,6 @@ class FormSubmissionBaseForm(forms.Form):
             field_plugin_instance = form_field.plugin_instance
             data[field_plugin_instance.name] = clean_data.get(form_field.name, '').__str__()
 
-
-        # for num, field in enumerate(self.salesforce_marketing_questions, start=1):
-        #     data['MarketingQuestion{}'.format(num)] = force_text(self.fields[field].label)
-        #     data['MarketingAnswer{}'.format(num)] = clean_data[field]
         return data
 
     def send_to_salesforce(self):
