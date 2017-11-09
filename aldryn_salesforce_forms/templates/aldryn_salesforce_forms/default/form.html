@@ -46,6 +46,9 @@
     {% for field in form.hidden_fields %}
         {{ field }}
     {% endfor %}
+    {% for name, value in instance.hidden_fields.items %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}" />
+    {% endfor %}
 </form>
 
 {# INFO: this solution is currently required because we can't redirect from a plugin. #}

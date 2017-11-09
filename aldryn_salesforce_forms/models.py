@@ -157,7 +157,13 @@ class FormPlugin(CMSPlugin):
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
-
+    hidden_fields = AttributesField(
+        verbose_name=_('Hidden Fields'),
+        help_text=_(
+            'Additional hidden fields to add to the form. (name/value)'
+        ),
+        blank=True,
+    )
 
     def __str__(self):
         return self.name
