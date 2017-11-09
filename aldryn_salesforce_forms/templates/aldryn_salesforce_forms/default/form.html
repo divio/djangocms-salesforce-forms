@@ -1,63 +1,68 @@
 {% load i18n cms_tags sekizai_tags %}
-<form
-    method="post" action="{{ action_url }}"
-    id="form-{{ instance.pk }}"
-    role="form"
-    {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
-    {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
-    class="form {{ instance.custom_classes }}">
-    <input type="hidden" name="_clientID" value="{{ client_id }}">
-    <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
-    <input type="hidden" name="_successURL" value="{{ success_url }}">
-    <input type="hidden" name="_errorURL" value="{{ error_url }}">
-    <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
-    <input type="hidden" name="SubscriberKey" id="SubscriberKey">
-    {% addtoblock "js" %}
-        <script defer>
-            var email = document.getElementById('id_EmailAddress');
-            email.onchange = function () {
-                document.getElementById('SubscriberKey').value = this.value;
-            }
-        </script>
-    {% endaddtoblock %}
-    <input type="hidden" name="_action" value="add">
-    <input type="hidden" name="_returnXML" value="0">
 
-    {% if form.non_field_errors %}
-        {% for error in form.non_field_errors %}
-            <p>{{ error }}</p>
+{% if form_success %}
+    <div class="submitted-message">
+        {{ instance.success_message|default:_('thank you') }}
+    </div>
+    {% if instance.success_url %}
+        {% addtoblock "js" %}
+            <script>
+                setTimeout(function () {
+                    window.location.href = '{{ instance.success_url }}';
+                }, 2000);
+            </script>
+        {% endaddtoblock %}
+    {% endif %}
+{% else %}
+    <form
+        method="post" action="{{ action_url }}"
+        id="form-{{ instance.pk }}"
+        role="form"
+        {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
+        {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
+        class="form {{ instance.custom_classes }}">
+        <input type="hidden" name="_clientID" value="{{ client_id }}">
+        <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
+        <input type="hidden" name="_successURL" value="{{ success_url }}">
+        <input type="hidden" name="_errorURL" value="{{ error_url }}">
+        <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
+        <input type="hidden" name="SubscriberKey" id="SubscriberKey">
+        {% addtoblock "js" %}
+            <script defer>
+                var email = document.getElementById('id_EmailAddress');
+                email.onchange = function () {
+                    document.getElementById('SubscriberKey').value = this.value;
+                }
+            </script>
+        {% endaddtoblock %}
+        <input type="hidden" name="_action" value="add">
+        <input type="hidden" name="_returnXML" value="0">
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if form_success_url %}
+            <p>
+                {% blocktrans %}
+                    Thank you for submitting your information, you will be
+                    <a href="{{ form_success_url }}">redirected shortly</a>.
+                {% endblocktrans %}
+            </p>
+        {% endif %}
+
+        {% if not form_success_url %}
+            {% for plugin in instance.child_plugin_instances %}
+                {% render_plugin plugin %}
+            {% endfor %}
+        {% endif %}
+        {% for field in form.hidden_fields %}
+            {{ field }}
         {% endfor %}
-    {% endif %}
-
-    {% if form_success_url %}
-        <p>
-            {% blocktrans %}
-                Thank you for submitting your information, you will be
-                <a href="{{ form_success_url }}">redirected shortly</a>.
-            {% endblocktrans %}
-        </p>
-    {% endif %}
-
-    {% if not form_success_url %}
-        {% for plugin in instance.child_plugin_instances %}
-            {% render_plugin plugin %}
+        {% for name, value in instance.hidden_fields.items %}
+            <input type="hidden" name="{{ name }}" value="{{ value }}" />
         {% endfor %}
-    {% endif %}
-    {% for field in form.hidden_fields %}
-        {{ field }}
-    {% endfor %}
-    {% for name, value in instance.hidden_fields.items %}
-        <input type="hidden" name="{{ name }}" value="{{ value }}" />
-    {% endfor %}
-</form>
-
-{# INFO: this solution is currently required because we can't redirect from a plugin. #}
-{% if form_success_url %}
-    {% addtoblock "js" %}
-        <script>
-            setTimeout(function () {
-                window.location.href = '{{ form_success_url }}';
-            }, 2000);
-        </script>
-    {% endaddtoblock %}
+    </form>
 {% endif %}

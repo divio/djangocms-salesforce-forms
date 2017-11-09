@@ -38,7 +38,9 @@ class FormPlugin(FieldContainer):
     def render(self, context, instance, placeholder):
         context = super(FormPlugin, self).render(context, instance, placeholder)
         request = context['request']
-
+        if request.GET.get('success') == '1':
+            context['form_success'] = True
+            return context
         form = self.process_form(instance, request)
         context['action_url'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
         context['client_id'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_CLIENT_ID', '')

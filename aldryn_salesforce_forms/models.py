@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from django.utils.functional import cached_property
+
 from cms.models import CMSPlugin
 from cms.models.fields import PageField
 from django.db import models
@@ -152,8 +154,10 @@ class FormPlugin(CMSPlugin):
         verbose_name=_('Redirect to'),
         max_length=20,
         choices=REDIRECT_CHOICES,
-        help_text=_('Where to redirect the user when the form has been '
-                    'successfully sent?')
+        help_text=_(
+            'Where to redirect the user when the form has been successfully '
+            'sent?'
+        ),
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
@@ -167,6 +171,15 @@ class FormPlugin(CMSPlugin):
 
     def __str__(self):
         return self.name
+
+    @cached_property
+    def success_url(self):
+        if self.redirect_type == FormPlugin.REDIRECT_TO_PAGE:
+            return self.page.get_absolute_url()
+        elif self.redirect_type == FormPlugin.REDIRECT_TO_URL and self.url:
+            return self.url
+        else:
+            return ''
 
     def get_form_fields(self):
         from .cms_plugins import Field
