@@ -1,0 +1,4 @@
+{
+    "package-name": "aldryn-salesforce-forms",
+    "installed-apps": ["aldryn_salesforce_forms"]
+}
