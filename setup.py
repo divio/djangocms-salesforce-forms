@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
-import aldryn_salesforce_forms
+import djangocms_salesforce_forms
 
 
 setup(
-    name='aldryn-salesforce-forms',
+    name='djangocms-salesforce-forms',
     packages=find_packages(),
     include_package_data=True,
-    version=aldryn_salesforce_forms.__version__,
-    description=aldryn_salesforce_forms.__doc__,
+    version=djangocms_salesforce_forms.__version__,
+    description=djangocms_salesforce_forms.__doc__,
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: Developers',
@@ -22,6 +22,6 @@ setup(
     python_requires='~=3.5',
     author='Divio AG',
     author_email='info@divio.ch',
-    url='http://github.com/divio/aldryn-salesforce-forms',
+    url='http://github.com/divio/djangocms-salesforce-forms',
     license='BSD',
 )

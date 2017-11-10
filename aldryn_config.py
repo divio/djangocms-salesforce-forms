@@ -9,12 +9,20 @@ class Form(forms.BaseForm):
         from aldryn_addons.utils import boolean_ish, djsenv
         env = partial(djsenv, settings=settings)
 
-        settings['ALDRYN_SALESFORCE_FORMS_CLIENT_ID'] = str(env(
-            'ALDRYN_SALESFORCE_FORMS_CLIENT_ID',
+        settings['INSTALLED_APPS'].append('djangocms_salesforce_forms')
+
+        settings['DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID'] = str(env(
+            'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID',
             '',
         ))
-        settings['ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL'] = env(
-            'ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL',
+
+        settings['DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID'] = str(env(
+            'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID',
+            '',
+        ))
+
+        settings['DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL'] = env(
+            'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL',
             'https://cl.exct.net/DEManager.aspx',
         )
         return settings

@@ -1,10 +1,10 @@
-Aldryn Salesforce Forms
-=======================
+Django CMS Salesforce Forms
+===========================
 
-An IDEXX specific knockoff of aldryn-forms that submits to *SalesForce
+An knockoff of aldryn-forms that submits to *SalesForce
 Marketing Cloud (SFMC)*.
 
-IDEXX has setup the following fields in the  ``FormSubmissionData``
+Example Data Extension configuration in the ``Form_Submission_Data``
 Data Extension.
 
 

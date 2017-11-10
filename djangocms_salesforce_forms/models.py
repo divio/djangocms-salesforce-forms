@@ -35,14 +35,14 @@ FormField = namedtuple(
 
 
 class FormPlugin(CMSPlugin):
-    FALLBACK_FORM_TEMPLATE = 'aldryn_salesforce_forms/default/form.html'
+    FALLBACK_FORM_TEMPLATE = 'djangocms_salesforce_forms/default/form.html'
     DEFAULT_FORM_TEMPLATE = getattr(
-        settings, 'ALDRYN_SALESFORCE_FORMS_DEFAULT_TEMPLATE', FALLBACK_FORM_TEMPLATE)
+        settings, 'DJANGOCMS_SALESFORCE_FORMS_DEFAULT_TEMPLATE', FALLBACK_FORM_TEMPLATE)
 
     FORM_TEMPLATES = ((DEFAULT_FORM_TEMPLATE, _('Default - form.html')),)
 
-    if hasattr(settings, 'ALDRYN_SALESFORCE_FORMS_TEMPLATES'):
-        FORM_TEMPLATES += settings.ALDRYN_SALESFORCE_FORMS
+    if hasattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_TEMPLATES'):
+        FORM_TEMPLATES += settings.DJANGOCMS_SALESFORCE_FORMS
 
     REDIRECT_TO_PAGE = 'redirect_to_page'
     REDIRECT_TO_URL = 'redirect_to_url'
@@ -123,7 +123,7 @@ class FormPlugin(CMSPlugin):
 
     @property
     def client_id(self):
-        return getattr(settings, 'ALDRYN_SALESFORCE_FORMS_CLIENT_ID', '')
+        return getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID', '')
 
     @cached_property
     def success_url(self):

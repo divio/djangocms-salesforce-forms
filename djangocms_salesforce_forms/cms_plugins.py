@@ -4,12 +4,9 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
 from django.template.loader import select_template
-from django.utils.translation import ugettext, ugettext_lazy as _
-from django.db.models import query
-from django.utils.six import text_type
+from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.contrib.admin import TabularInline
-from django.contrib import messages
 from django.conf import settings
 from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
@@ -42,7 +39,7 @@ class FormPlugin(FieldContainer):
             context['form_success'] = True
             return context
         form = self.process_form(instance, request)
-        context['action_url'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
+        context['action_url'] = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
         context['error_url'] = request.build_absolute_uri(request.path)
         context['success_url'] = '{}?success=1'.format(request.build_absolute_uri(request.path))
         context['form'] = form
@@ -97,7 +94,7 @@ class FormPlugin(FieldContainer):
 
 
 class Fieldset(FieldContainer):
-    render_template = 'aldryn_salesforce_forms/fieldset.html'
+    render_template = 'djangocms_salesforce_forms/fieldset.html'
     name = _('Fieldset')
     model = models.FieldsetPlugin
 
@@ -270,8 +267,8 @@ class Field(FormElement):
 
     def get_template_names(self, instance, form_field_type):
         template_names = [
-            'aldryn_salesforce_forms/{0}/fields/{1}.html'.format(instance.template_set, form_field_type),
-            'aldryn_salesforce_forms/{0}/field.html'.format(instance.template_set),
+            'djangocms_salesforce_forms/{0}/fields/{1}.html'.format(instance.template_set, form_field_type),
+            'djangocms_salesforce_forms/{0}/field.html'.format(instance.template_set),
         ]
         return template_names
 
@@ -540,7 +537,7 @@ class MultipleCheckboxSelectField(SelectField):
 
 
 class SubmitButton(FormElement):
-    render_template = 'aldryn_salesforce_forms/default/submit_button.html'
+    render_template = 'djangocms_salesforce_forms/default/submit_button.html'
     name = _('Submit Button')
     module = _('Salesforce Form fields')
     model = models.FormButtonPlugin
