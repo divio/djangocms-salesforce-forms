@@ -43,8 +43,6 @@ class FormPlugin(FieldContainer):
             return context
         form = self.process_form(instance, request)
         context['action_url'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
-        context['client_id'] = getattr(settings, 'ALDRYN_SALESFORCE_FORMS_CLIENT_ID', '')
-        context['external_key'] = instance.external_key
         context['error_url'] = request.build_absolute_uri(request.path)
         context['success_url'] = '{}?success=1'.format(request.build_absolute_uri(request.path))
         context['form'] = form
@@ -52,13 +50,6 @@ class FormPlugin(FieldContainer):
 
     def get_render_template(self, context, instance, placeholder):
         return instance.form_template
-
-    def form_valid(self, instance, request, form):
-        self.send_success_message(instance, request)
-
-    def form_invalid(self, instance, request, form):
-        if instance.error_message:
-            form._add_error(message=instance.error_message)
 
     @classmethod
     def get_form_fields(cls, instance):
@@ -76,12 +67,6 @@ class FormPlugin(FieldContainer):
             'form_plugin': instance,
             'request': request,
         }
-
-        if request.method in ('POST', 'PUT'):
-            kwargs['data'] = request.POST.copy()
-            kwargs['data']['language'] = instance.language
-            kwargs['data']['form_plugin_id'] = instance.pk
-            kwargs['files'] = request.FILES
         return kwargs
 
     @classmethod
@@ -108,28 +93,7 @@ class FormPlugin(FieldContainer):
         form_class = self.get_form_class(instance)
         form_kwargs = self.get_form_kwargs(instance, request)
         form = form_class(**form_kwargs)
-
-        if form.is_valid():
-            if request.method == 'POST':
-                print('Processing valid form POST')
-                # form.send_to_salesforce()
-                # pass
-
-            self.form_valid(instance, request, form)
-
-        elif request.method == 'POST':
-            print('Invalid form')
-            # only call form_invalid if request is POST and form is not valid
-            self.form_invalid(instance, request, form)
         return form
-
-    def send_success_message(self, instance, request):
-        """
-        Sends a success message to the request user
-        using django's contrib.messages app.
-        """
-        message = instance.success_message or ugettext('The form has been sent.')
-        messages.success(request, message)
 
 
 class Fieldset(FieldContainer):
@@ -163,6 +127,7 @@ class Field(FormElement):
     form_field_widget = None
     form_field_enabled_options = ['label',  'name', 'help_text', 'required', 'attributes']
     form_field_disabled_options = []
+    form_field_type = None
 
     # Used to configure default fieldset in admin form
     fieldset_general_fields = [
@@ -180,28 +145,6 @@ class Field(FormElement):
         'required_message',
         'custom_classes',
     ]
-
-    def serialize_value(self, instance, value, is_confirmation=False):
-        if isinstance(value, query.QuerySet):
-            value = u', '.join(map(text_type, value))
-        elif value is None:
-            value = '-'
-        return text_type(value)
-
-    def serialize_field(self, form, field, is_confirmation=False):
-        """Returns a (key, label, value) named tuple for the given field."""
-        value = self.serialize_value(
-            instance=field.plugin_instance,
-            value=form.cleaned_data[field.name],
-            is_confirmation=is_confirmation
-        )
-        serialized_field = models.SerializedFormField(
-            name=field.name,
-            label=field.label,
-            field_occurrence=field.field_occurrence,
-            value=value,
-        )
-        return serialized_field
 
     def get_form_field(self, instance):
         form_field_class = self.get_form_field_class(instance)
@@ -260,7 +203,6 @@ class Field(FormElement):
             value_items = instance.attributes.items()
             for key, value in value_items:
                 attrs[key] = value
-
         return attrs
 
     def get_form_field_widget_kwargs(self, instance):
@@ -273,12 +215,20 @@ class Field(FormElement):
 
         if form and hasattr(form, 'form_plugin'):
             form_plugin = form.form_plugin
-            field_name = form_plugin.get_form_field_name(field=instance)
-            context['field'] = form[field_name]
+            field = form_plugin.get_form_field(instance)
+            context['field'] = form[field.name]
+            if field.name != instance.name:
+                context['field_definition_error'] = (
+                    _('Duplicate field name: "{}"').format(field.name)
+                )
         return context
 
     def get_render_template(self, context, instance, placeholder):
-        templates = self.get_template_names(instance)
+        if self.form_field_type:
+            form_field_type = self.form_field_type
+        else:
+            form_field_type = instance.field_type
+        templates = self.get_template_names(instance, form_field_type=form_field_type)
         return select_template(templates)
 
     def get_fieldsets(self, request, obj=None):
@@ -318,9 +268,9 @@ class Field(FormElement):
         disabled_options = self.form_field_disabled_options
         return [option for option in enabled_options if option not in disabled_options]
 
-    def get_template_names(self, instance):
+    def get_template_names(self, instance, form_field_type):
         template_names = [
-            'aldryn_salesforce_forms/{0}/fields/{1}.html'.format(instance.template_set, instance.field_type),
+            'aldryn_salesforce_forms/{0}/fields/{1}.html'.format(instance.template_set, form_field_type),
             'aldryn_salesforce_forms/{0}/field.html'.format(instance.template_set),
         ]
         return template_names
@@ -352,6 +302,7 @@ class TextField(AbstractTextField):
     model = models.TextFieldPlugin
     form = TextFieldForm
     form_field_widget = forms.CharField.widget
+    form_field_type = 'textfield'
 
     def get_form_field_widget_attrs(self, instance):
         attrs = super(TextField, self).get_form_field_widget_attrs(instance)
@@ -360,15 +311,13 @@ class TextField(AbstractTextField):
             attrs['type'] = instance.type
         return attrs
 
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/textfield.html'.format(context['chosen_template'])
-
 
 class TextAreaField(AbstractTextField):
     name = _('Text Area Field')
     model = models.TextAreaFieldPlugin
     form = TextAreaFieldForm
     form_field_widget = forms.Textarea
+    form_field_type = 'textareafield'
 
     fieldset_general_fields = [
         'label',
@@ -399,9 +348,6 @@ class TextAreaField(AbstractTextField):
             attrs['rows'] = instance.text_area_rows
         return attrs
 
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/textareafield.html'.format(context['chosen_template'])
-
 
 class BooleanField(Field):
     name = _('Yes/No Field (checkbox)')
@@ -409,6 +355,7 @@ class BooleanField(Field):
     form = BooleanFieldForm
     form_field = forms.BooleanField
     form_field_widget = form_field.widget
+    form_field_type = 'booleanfield'
     form_field_enabled_options = [
         'label',
         'name',
@@ -429,11 +376,8 @@ class BooleanField(Field):
         'custom_classes',
     ]
 
-    def serialize_value(self, instance, value, is_confirmation=False):
-        return ugettext('Yes') if value else ugettext('No')
-
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/booleanfield.html'.format(context['chosen_template'])
+    # def serialize_value(self, instance, value, is_confirmation=False):
+    #     return ugettext('Yes') if value else ugettext('No')
 
 
 class SelectOptionInline(TabularInline):
@@ -446,6 +390,7 @@ class AbstractSelectField(Field):
     form = SelectFieldForm
     form_field = None
     form_field_widget = None
+    form_field_type = 'selectfield'
     form_field_enabled_options = [
         'label',
         'name',
@@ -464,9 +409,6 @@ class AbstractSelectField(Field):
         'required_message',
         'custom_classes',
     ]
-
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/selectfield.html'.format(context['chosen_template'])
 
 
 class SelectField(AbstractSelectField):
@@ -524,6 +466,7 @@ class RadioSelectField(Field):
     form = RadioFieldForm
     form_field = forms.ModelChoiceField
     form_field_widget = forms.RadioSelect
+    form_field_type = 'radioselectfield'
     form_field_enabled_options = [
         'label',
         'name',
@@ -555,9 +498,6 @@ class RadioSelectField(Field):
                 break
         return kwargs
 
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/radioselectfield.html'.format(context['chosen_template'])
-
 
 class MultipleCheckboxSelectField(SelectField):
     name = _('Multiple Checkbox Select Field')
@@ -565,6 +505,7 @@ class MultipleCheckboxSelectField(SelectField):
     form = MultipleSelectFieldForm
     form_field = forms.ModelMultipleChoiceField
     form_field_widget = forms.CheckboxSelectMultiple
+    form_field_type = 'multiplecheckboxselectfield'
     form_field_enabled_options = [
         'label',
         'name',
@@ -597,21 +538,15 @@ class MultipleCheckboxSelectField(SelectField):
         kwargs['initial'] = [o.pk for o in kwargs['queryset'] if o.default_value]
         return kwargs
 
-    def get_render_template(self, context, instance, placeholder):
-        return 'aldryn_salesforce_forms/{}/fields/multiplecheckboxselectfield.html'.format(context['chosen_template'])
-
 
 class SubmitButton(FormElement):
-    # render_template = True
     render_template = 'aldryn_salesforce_forms/default/submit_button.html'
     name = _('Submit Button')
     module = _('Salesforce Form fields')
     model = models.FormButtonPlugin
     require_parent = True
     parent_classes = ['FormPlugin']
-
-    # def get_render_template(self, context, instance, placeholder):
-    #     return 'aldryn_salesforce_forms/{}/submit_button.html'.format(context['chosen_template'])
+    form_field_type = 'submit_button'
 
 
 def register_csv_based_select_field(csv_file_path):

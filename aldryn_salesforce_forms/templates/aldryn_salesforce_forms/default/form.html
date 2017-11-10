@@ -19,13 +19,11 @@
         id="form-{{ instance.pk }}"
         role="form"
         {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
-        {% if form.is_multipart %} enctype="multipart/form-data"{% endif %}
         class="form {{ instance.custom_classes }}">
-        <input type="hidden" name="_clientID" value="{{ client_id }}">
-        <input type="hidden" name="_deExternalKey" value="{{ external_key }}">
+        <input type="hidden" name="_clientID" value="{{ instance.client_id }}">
+        <input type="hidden" name="_deExternalKey" value="{{ instance.external_key }}">
         <input type="hidden" name="_successURL" value="{{ success_url }}">
         <input type="hidden" name="_errorURL" value="{{ error_url }}">
-        <input type="hidden" name="Name of Form" value="{{ instance.form_name }}">
         <input type="hidden" name="SubscriberKey" id="SubscriberKey">
         {% addtoblock "js" %}
             <script defer>

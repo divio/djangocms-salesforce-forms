@@ -35,44 +35,8 @@ FormField = namedtuple(
         'name',
         'label',
         'plugin_instance',
-        'field_occurrence',
-        'field_type_occurrence',
     ]
 )
-BaseSerializedFormField = namedtuple(
-    'SerializedFormField',
-    field_names=[
-        'name',
-        'label',
-        'field_occurrence',
-        'value',
-    ]
-)
-
-
-class SerializedFormField(BaseSerializedFormField):
-
-    # For _asdict() with Py3K
-    __slots__ = ()
-
-    @property
-    def field_id(self):
-        field_label = self.label.strip()
-
-        if field_label:
-            field_as_string = u'{}-{}'.format(field_label, self.field_type)
-        else:
-            field_as_string = self.name
-        field_id = u'{}:{}'.format(field_as_string, self.field_occurrence)
-        return field_id
-
-    @property
-    def field_type_occurrence(self):
-        return self.name.rpartition('_')[1]
-
-    @property
-    def field_type(self):
-        return self.name.rpartition('_')[0]
 
 
 class FormPlugin(CMSPlugin):
@@ -92,20 +56,10 @@ class FormPlugin(CMSPlugin):
         (REDIRECT_TO_URL, _('Absolute URL')),
     ]
 
-    _form_elements = None
-    _form_field_key_cache = None
-
     name = models.CharField(
         verbose_name=_('Name'),
         max_length=255,
         help_text=_('Used to name the form instance.')
-    )
-    form_name = models.CharField(
-        verbose_name=_('Name of Form'),
-        max_length=255,
-        help_text=_('Optional. Used as the value of the hidden "Name of Form" field.'),
-        blank=True,
-        null=True
     )
     external_key = models.CharField(
         verbose_name=_('External Key'),
@@ -172,6 +126,10 @@ class FormPlugin(CMSPlugin):
     def __str__(self):
         return self.name
 
+    @property
+    def client_id(self):
+        return getattr(settings, 'ALDRYN_SALESFORCE_FORMS_CLIENT_ID', '')
+
     @cached_property
     def success_url(self):
         if self.redirect_type == FormPlugin.REDIRECT_TO_PAGE:
@@ -186,76 +144,44 @@ class FormPlugin(CMSPlugin):
 
         fields = []
 
-        # A field occurrence is how many times does a field
-        # with the same label and type appear within the same form.
-        # This is used as an identifier for the field within multiple forms.
-        field_occurrences = defaultdict(lambda: 1)
-
-        # A field type occurrence is how many times does a field
-        # with the same type appear within the same form.
-        # This is used as an identifier for the field within this form.
-        field_type_occurrences = defaultdict(lambda: 1)
-
         form_elements = self.get_form_elements()
         is_form_field = lambda plugin: issubclass(
             plugin.get_plugin_class(), Field)
         field_plugins = [
             plugin for plugin in form_elements if is_form_field(plugin)]
 
+        field_names = set()
+
         for field_plugin in field_plugins:
-            field_type = field_plugin.field_type
-
-            if field_type in field_type_occurrences:
-                field_type_occurrences[field_type] += 1
-
-            field_type_occurrence = field_type_occurrences[field_type]
-
-            field_name = (
-                getattr(field_plugin, 'name', None) or
-                u'{0}_{1}'.format(field_type, field_type_occurrence)
-            )
+            field_name = getattr(field_plugin, 'name', None)
             field_label = field_plugin.get_label()
-
-            if field_label:
-                field_id = u'{0}_{1}'.format(field_type, field_label)
-            else:
-                field_id = field_name
-            field_id = field_id.replace(' ', '_')
-
-            if field_id in field_occurrences:
-                field_occurrences[field_id] += 1
-
+            if field_name in field_names:
+                # There already is a field with this name. Make it unique.
+                counter = 2
+                while '{}_{}'.format(field_name, counter) in field_names:
+                    counter += 1
+                field_name = '{}_{}'.format(field_name, counter)
+            field_names.add(field_name)
             field = FormField(
                 name=field_name,
                 label=field_label,
                 plugin_instance=field_plugin,
-                field_occurrence=field_occurrences[field_id],
-                field_type_occurrence=field_type_occurrence,
             )
             fields.append(field)
         return fields
 
-    def get_form_field_name(self, field):
-        if self._form_field_key_cache is None:
+    def get_form_field(self, instance):
+        if not hasattr(self, '_form_field_key_cache'):
             self._form_field_key_cache = {}
-
-        if field.pk not in self._form_field_key_cache:
-            fields_by_key = self.get_form_fields_by_name()
-
-            for name, _field in fields_by_key.items():
-                self._form_field_key_cache[_field.plugin_instance.pk] = name
-        return self._form_field_key_cache[field.pk]
+            for fld in self.get_form_fields():
+                self._form_field_key_cache[fld.plugin_instance.pk] = fld
+        return self._form_field_key_cache.get(instance.pk)
 
     def get_form_fields_as_choices(self):
         fields = self.get_form_fields()
 
         for field in fields:
             yield (field.name, field.label)
-
-    def get_form_fields_by_name(self):
-        fields = self.get_form_fields()
-        fields_by_name = SortedDict((field.name, field) for field in fields)
-        return fields_by_name
 
     def get_form_elements(self):
         from .utils import get_nested_plugins
@@ -276,11 +202,12 @@ class FormPlugin(CMSPlugin):
             # Set back the original parent
             self.parent_id = parent_id
 
-        if self._form_elements is None:
+        if not hasattr(self, '_form_elements'):
             children = get_nested_plugins(self)
             children_instances = downcast_plugins(children)
             self._form_elements = [
-                p for p in children_instances if is_form_element(p)]
+                p for p in children_instances if is_form_element(p)
+            ]
         return self._form_elements
 
 
