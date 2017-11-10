@@ -24,11 +24,6 @@ FORM_TEMPLATE_SET += getattr(
         [],
     )
 
-
-FieldData = namedtuple(
-    'FieldData',
-    field_names=['label', 'value']
-)
 FormField = namedtuple(
     'FormField',
     field_names=[
