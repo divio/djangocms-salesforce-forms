@@ -1,1 +1,39 @@
-{% extends "aldryn_salesforce_forms/default/field.html" %}
+{% load i18n aldryn_salesforce_forms_tags %}
+
+{% if field %}
+    <div class="form-group{% if field.field.required %} form-required{% endif %}{% if field.errors %} has-error{% endif %}">
+        {% block form_field_label %}
+            <label class="control-label{% if not field.label %} sr-only{% endif %}" for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %}<abbr title="{% trans "Required field" %}">*</abbr>{% endif %}
+            </label>
+        {% endblock form_field_label %}
+
+        {% block form_field %}
+            <div class="control-field">
+                {% for choice in field.field.choices %}
+                    <div class="radio">
+                        <label class="checkbox-label">
+                            <input type="radio" value="{{ choice.0 }}" name="{{ field.name }}"
+                                {% if instance.attributes %} {{ instance.attributes_str }}{% endif %}
+                                {% if choice.0|force_text in field.value|force_text_list %} checked="checked"{% endif %}>
+                            <span class="checkbox-inner">
+                                <span class="checkbox-visual"></span>
+                                <span class="checkbox-label-text">{{ choice.1 }}</span>
+                            </span>
+                        </label>
+                    </div>
+                {% endfor %}
+
+                {% block form_field_errors %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}<span class="text-danger">{{ error }}</span>{% endfor %}
+                    {% endif %}
+                {% endblock form_field_errors %}
+
+                {% block form_field_help_text %}
+                    {% if field.help_text %}<span class="help-block">{{ field.help_text }}</span>{% endif %}
+                {% endblock form_field_help_text %}
+            </div>
+        {% endblock form_field %}
+    </div>
+{% endif %}
