@@ -45,3 +45,6 @@ Data Extension.
 | MarketingAnswer9    | Text      | 255    | Yes      |
 | MarketingQuestion10 | Text      | 255    | Yes      |
 | MarketingAnswer10   | Text      | 255    | Yes      |
+
+
+https://help.marketingcloud.com/en/documentation/exacttarget/subscribers/web_collect/#section_16
