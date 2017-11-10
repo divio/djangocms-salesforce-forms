@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
@@ -12,8 +11,6 @@ from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
 from .forms import FormPluginForm, RadioFieldForm, SelectFieldForm, BooleanFieldForm, TextAreaFieldForm, \
     TextFieldForm, FormSubmissionBaseForm, MultipleSelectFieldForm
-
-from csv import reader as csv_reader
 
 
 class FormElement(CMSPluginBase):
@@ -94,9 +91,10 @@ class FormPlugin(FieldContainer):
 
 
 class Fieldset(FieldContainer):
-    render_template = 'djangocms_salesforce_forms/fieldset.html'
+    render_template = True
     name = _('Fieldset')
     model = models.FieldsetPlugin
+    module = _('Salesforce Form fields')
 
     fieldsets = (
         (None, {
@@ -111,6 +109,11 @@ class Fieldset(FieldContainer):
             )
         }),
     )
+
+    def get_render_template(self, context, instance, placeholder):
+        return 'djangocms_salesforce_forms/{0}/fields/fieldset.html'.format(
+            instance.template_set
+        )
 
 
 class Field(FormElement):
@@ -426,37 +429,6 @@ class SelectField(AbstractSelectField):
         return kwargs
 
 
-class CsvBasedSelectField(AbstractSelectField):
-    name = None
-    csv_file = None
-    cache = False
-
-    form_field = forms.ChoiceField
-    form_field_widget = form_field.widget
-
-    inlines = []
-
-    def get_form_field_kwargs(self, instance):
-        kwargs = super(CsvBasedSelectField, self).get_form_field_kwargs(instance)
-        if instance.required:
-            choices = []
-        else:
-            choices = [("", "---------")]
-            # as in django.form.fields.FilePathField
-        try:
-            with open(self.csv_file) as f:
-                reader = csv_reader(f)
-                for row in reader:
-                    if len(row) >= 2:
-                        choices.append((row[0], row[1]))
-                    elif len(row) == 1:
-                        choices.append((row[0], row[0]))
-        except FileNotFoundError:
-            choices = [('N/A', 'File not found: ' + self.csv_file)]
-        kwargs['choices'] = choices
-        return kwargs
-
-
 class RadioSelectField(Field):
     name = _('Radio Select Field')
 
@@ -546,15 +518,6 @@ class SubmitButton(FormElement):
     form_field_type = 'submit_button'
 
 
-def register_csv_based_select_field(csv_file_path):
-    name = os.path.split(os.path.splitext(element)[0])[1].capitalize()
-    plugin_name = _(name + ' Select Field')
-    name = ''.join([character for character in name if character.isalpha()])
-    subclass_name = name + 'CsvBasedSelectField'
-    new_subclass = type(subclass_name, (CsvBasedSelectField,), dict(name=plugin_name, csv_file=csv_file_path))
-    plugin_pool.register_plugin(new_subclass)
-
-
 plugin_pool.register_plugin(FormPlugin)
 plugin_pool.register_plugin(Fieldset)
 plugin_pool.register_plugin(BooleanField)
@@ -564,11 +527,3 @@ plugin_pool.register_plugin(SubmitButton)
 plugin_pool.register_plugin(TextAreaField)
 plugin_pool.register_plugin(TextField)
 plugin_pool.register_plugin(MultipleCheckboxSelectField)
-
-
-CSV_DATA_DIR = os.path.join(os.path.dirname(models.__file__), 'csvdata/')
-
-for element in os.listdir(CSV_DATA_DIR):
-    if os.path.splitext(element)[1] == '.csv':
-        register_csv_based_select_field(CSV_DATA_DIR + element)
-

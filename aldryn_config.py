@@ -16,8 +16,8 @@ class Form(forms.BaseForm):
             '',
         ))
 
-        settings['DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID'] = str(env(
-            'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID',
+        settings['DJANGOCMS_SALESFORCE_FORMS_EXTERNAL_KEY'] = str(env(
+            'DJANGOCMS_SALESFORCE_FORMS_EXTERNAL_KEY',
             '',
         ))
 

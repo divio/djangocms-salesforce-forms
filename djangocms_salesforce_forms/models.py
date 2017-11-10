@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.utils.functional import cached_property
 
-from cms.models import CMSPlugin
+from cms.models import CMSPlugin, ValidationError
 from cms.models.fields import PageField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -34,6 +34,23 @@ FormField = namedtuple(
 )
 
 
+def get_default_client_id():
+    return getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID', '')
+
+
+def get_default_external_key():
+    return getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_EXTERNAL_KEY', '')
+
+
+class CustomAttributesField(AttributesField):
+    def validate_key(self, key):
+        # Verify the key is not one of `excluded_keys`.
+        if key.lower() in self.excluded_keys:
+            raise ValidationError(
+                _('"{key}" is excluded by configuration and cannot be used as '
+                  'a key.').format(key=key))
+
+
 class FormPlugin(CMSPlugin):
     FALLBACK_FORM_TEMPLATE = 'djangocms_salesforce_forms/default/form.html'
     DEFAULT_FORM_TEMPLATE = getattr(
@@ -56,6 +73,15 @@ class FormPlugin(CMSPlugin):
         max_length=255,
         help_text=_('Used to name the form instance.')
     )
+    client_id = models.CharField(
+        verbose_name=_('Client ID'),
+        max_length=255,
+        help_text=_(
+            'Client ID to use for the submission '
+            '(_clientID field)'
+        ),
+        default=get_default_client_id,
+    )
     external_key = models.CharField(
         verbose_name=_('External Key'),
         max_length=255,
@@ -63,7 +89,7 @@ class FormPlugin(CMSPlugin):
             'DEManager External Key to use for the submission '
             '(_deExternalKey field)'
         ),
-        default='Form_Submission_Data',
+        default=get_default_external_key,
     )
     custom_classes = models.CharField(
         verbose_name=_('custom css classes'),
@@ -110,7 +136,7 @@ class FormPlugin(CMSPlugin):
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
-    hidden_fields = AttributesField(
+    hidden_fields = CustomAttributesField(
         verbose_name=_('Hidden Fields'),
         help_text=_(
             'Additional hidden fields to add to the form. (name/value)'
@@ -120,10 +146,6 @@ class FormPlugin(CMSPlugin):
 
     def __str__(self):
         return self.name
-
-    @property
-    def client_id(self):
-        return getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_CLIENT_ID', '')
 
     @cached_property
     def success_url(self):
@@ -210,7 +232,14 @@ class FieldsetPlugin(CMSPlugin):
 
     legend = models.CharField(_('Legend'), max_length=255, blank=True)
     custom_classes = models.CharField(
-        verbose_name=_('custom css classes'), max_length=255, blank=True)
+        verbose_name=_('custom css classes'), max_length=255, blank=True
+    )
+    template_set = models.CharField(
+        verbose_name=_('Template'),
+        choices=FORM_TEMPLATE_SET,
+        default=FORM_TEMPLATE_SET[0][0],
+        max_length=255,
+    )
 
     def __str__(self):
         return self.legend or str(self.pk)
