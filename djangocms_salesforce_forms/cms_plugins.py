@@ -125,7 +125,13 @@ class Field(FormElement):
     # Custom field related attributes
     form_field = None
     form_field_widget = None
-    form_field_enabled_options = ['label',  'name', 'help_text', 'required', 'attributes']
+    form_field_enabled_options = [
+        'label',
+        'name',
+        'help_text',
+        'required',
+        'attributes',
+    ]
     form_field_disabled_options = []
     form_field_type = None
 
@@ -135,7 +141,6 @@ class Field(FormElement):
         'name',
         'type',
         'placeholder_text',
-        'initial_value',
         'required',
     ]
     fieldset_advanced_fields = [
@@ -179,9 +184,12 @@ class Field(FormElement):
         if 'validators' in allowed_options:
             kwargs['validators'] = self.get_form_field_validators(instance)
         if 'default_value' in allowed_options:
+            # This is a field with multiple options and a potential default.
             qs = instance.option_set.filter(default_value=True)
             kwargs['initial'] = qs[0] if qs.exists() else None
-
+        if 'initial_value_single' in allowed_options:
+            # This is a text field or similar that has an initial_value.
+            kwargs['initial'] = instance.initial_value
         return kwargs
 
     def get_form_field_widget(self, instance):
@@ -287,6 +295,7 @@ class AbstractTextField(Field):
         'error_messages',
         'validators',
         'placeholder',
+        'initial_value_single',
     ]
 
     def get_form_field_validators(self, instance):
