@@ -28,6 +28,7 @@
         {% addtoblock "js" %}
             <script defer>
                 var email = document.getElementById('id_EmailAddress');
+                document.getElementById('SubscriberKey').value = email.value;
                 email.onchange = function () {
                     document.getElementById('SubscriberKey').value = this.value;
                 }
