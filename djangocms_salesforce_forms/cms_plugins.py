@@ -312,6 +312,9 @@ class TextField(AbstractTextField):
     form = TextFieldForm
     form_field_widget = forms.CharField.widget
     form_field_type = 'textfield'
+    fieldset_general_fields = Field.fieldset_general_fields + [
+        'initial_value',
+    ]
 
     def get_form_field_widget_attrs(self, instance):
         attrs = super(TextField, self).get_form_field_widget_attrs(instance)
