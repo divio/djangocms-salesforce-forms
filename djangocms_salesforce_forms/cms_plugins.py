@@ -2,6 +2,9 @@
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
+from django.db.models import FloatField
+from django.db.models.functions import Cast
+from django.db.utils import DataError
 from django.template.loader import select_template
 from django.utils.translation import ugettext_lazy as _
 from django import forms
@@ -36,7 +39,9 @@ class FormPlugin(FieldContainer):
             context['form_success'] = True
             return context
         form = self.process_form(instance, request)
-        context['action_url'] = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
+        context['action_url'] = getattr(
+            settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx'
+        )
         context['error_url'] = request.build_absolute_uri(request.path)
         context['success_url'] = '{}?success=1'.format(request.build_absolute_uri(request.path))
         context['form'] = form
@@ -283,6 +288,16 @@ class Field(FormElement):
         ]
         return template_names
 
+    def get_sorted_options(self, instance):
+        try:
+            # values are numeric: sort them as numbers
+            qs = instance.option_set.annotate(numeric_value=Cast('value', FloatField())).order_by('numeric_value')
+            qs.count()  # force queryset evaluation (otherwise DataError for NaN values would not be raised here)
+            return qs
+        except DataError:
+            # values are not numeric: keep default A-Z sorting
+            return instance.option_set.all()
+
 
 class AbstractTextField(Field):
     form_field = forms.CharField
@@ -433,7 +448,7 @@ class SelectField(AbstractSelectField):
 
     def get_form_field_kwargs(self, instance):
         kwargs = super(SelectField, self).get_form_field_kwargs(instance)
-        kwargs['queryset'] = instance.option_set.all()
+        kwargs['queryset'] = self.get_sorted_options(instance)
         for opt in kwargs['queryset']:
             if opt.default_value:
                 kwargs['initial'] = opt.pk
@@ -471,7 +486,7 @@ class RadioSelectField(Field):
 
     def get_form_field_kwargs(self, instance):
         kwargs = super(RadioSelectField, self).get_form_field_kwargs(instance)
-        kwargs['queryset'] = instance.option_set.all()
+        kwargs['queryset'] = self.get_sorted_options(instance)
         kwargs['empty_label'] = None
         for opt in kwargs['queryset']:
             if opt.default_value:
