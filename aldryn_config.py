@@ -6,7 +6,7 @@ class Form(forms.BaseForm):
 
     def to_settings(self, data, settings):
         from functools import partial
-        from aldryn_addons.utils import boolean_ish, djsenv
+        from aldryn_addons.utils import djsenv
         env = partial(djsenv, settings=settings)
 
         settings['INSTALLED_APPS'].append('djangocms_salesforce_forms')

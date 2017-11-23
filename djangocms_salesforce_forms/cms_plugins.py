@@ -4,7 +4,6 @@ from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
 from django.db.models import FloatField
 from django.db.models.functions import Cast
-from django.db.utils import DataError
 from django.template.loader import select_template
 from django.utils.translation import ugettext_lazy as _
 from django import forms
@@ -290,11 +289,10 @@ class Field(FormElement):
 
     def get_sorted_options(self, instance):
         try:
+            list(map(lambda x: float(x.strip()), instance.option_set.values_list('value', flat=True)))
             # values are numeric: sort them as numbers
-            qs = instance.option_set.annotate(numeric_value=Cast('value', FloatField())).order_by('numeric_value')
-            qs.count()  # force queryset evaluation (otherwise DataError for NaN values would not be raised here)
-            return qs
-        except DataError:
+            return instance.option_set.annotate(numeric_value=Cast('value', FloatField())).order_by('numeric_value')
+        except ValueError:
             # values are not numeric: keep default A-Z sorting
             return instance.option_set.all()
 
