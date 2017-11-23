@@ -1,7 +1,7 @@
 setup:
-	python setup.py develop
-	pip install -r requirements_test.txt
+	pip install -r tests/requirements.txt
 
 test:
-	flake8 . --max-line-length=120 --exclude=.git,*/migrations/*,*/static/*,*__init__* --ignore=E731
-	./manage.py test ${ARGS}
+	flake8 . --max-line-length=120 --exclude=.git,.eggs,*/migrations/*,*/static/*,*__init__* --ignore=E731
+	coverage run ./setup.py test
+	coverage report

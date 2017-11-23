@@ -385,4 +385,3 @@ class FormButtonPlugin(CMSPlugin):
 
     def __str__(self):
         return self.label
-
