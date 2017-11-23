@@ -2,8 +2,6 @@
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
-from django.db.models import FloatField
-from django.db.models.functions import Cast
 from django.template.loader import select_template
 from django.utils.translation import ugettext_lazy as _
 from django import forms
@@ -290,11 +288,13 @@ class Field(FormElement):
     def get_sorted_options(self, instance):
         try:
             list(map(lambda x: float(x.strip()), instance.option_set.values_list('value', flat=True)))
-            # values are numeric: sort them as numbers
-            return instance.option_set.annotate(numeric_value=Cast('value', FloatField())).order_by('numeric_value')
         except ValueError:
             # values are not numeric: keep default A-Z sorting
             return instance.option_set.all()
+        else:
+            # values are numeric: sort them as numbers
+            # "Cast('value', FloatField())"" is tempting but only works from Django 1.10 on.
+            return instance.option_set.extra({'numeric_value': "CAST(value as UNSIGNED)"}).order_by('numeric_value')
 
 
 class AbstractTextField(Field):

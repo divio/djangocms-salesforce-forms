@@ -1,13 +1,17 @@
+from cms.api import add_plugin
+from cms.models import Placeholder
 from django.test import TestCase
-from djangocms_salesforce_forms.models import FieldPlugin, Option
+
 from djangocms_salesforce_forms.cms_plugins import Field as CMSPluginField
 
 
 class FieldOptionsOrderingTestCase(TestCase):
     def assertQuerysetOrdered(self, input_values, expected_output):
-        field = FieldPlugin.objects.create(name='SelectField')
+        placeholder = Placeholder.objects.create(slot='test')
+        field = add_plugin(placeholder, 'SelectField', 'en')
+
         for value in input_values:
-            Option.objects.create(value=value, field=field)
+            field.option_set.create(value=value)
 
         cms_plugin_field = CMSPluginField()
         result = [x.value for x in cms_plugin_field.get_sorted_options(field)]
@@ -25,3 +29,6 @@ class FieldOptionsOrderingTestCase(TestCase):
     def test_hybrid_values(self):
         self.assertQuerysetOrdered(['1', '20', 'Hamster', '100'], ['1', '100', '20', 'Hamster'])
         self.assertQuerysetOrdered(['1', '20.2', 'Hamster', '100', 'Sloth'], ['1', '100', '20.2', 'Hamster', 'Sloth'])
+
+    def test_sql_injection_safe(self):
+        self.assertQuerysetOrdered(['value as UNSIGNED); DROP TABLE USER;'], ['value as UNSIGNED); DROP TABLE USER;'])
