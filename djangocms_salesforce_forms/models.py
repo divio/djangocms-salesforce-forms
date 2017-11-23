@@ -362,7 +362,6 @@ class TextAreaFieldPlugin(FieldPluginBase):
 
 
 class Option(models.Model):
-
     class Meta:
         verbose_name = _('Option')
         verbose_name_plural = _('Options')
@@ -377,10 +376,8 @@ class Option(models.Model):
 
 
 class FormButtonPlugin(CMSPlugin):
-
     label = models.CharField(_('Label'), max_length=255)
-    custom_classes = models.CharField(
-        verbose_name=_('custom css classes'), max_length=255, blank=True)
+    custom_classes = models.CharField(verbose_name=_('custom css classes'), max_length=255, blank=True)
     # cmsplugin_ptr = CMSPluginField()
 
     def __str__(self):
