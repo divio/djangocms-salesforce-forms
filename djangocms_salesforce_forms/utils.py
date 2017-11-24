@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from django.forms.forms import NON_FIELD_ERRORS
+from __future__ import unicode_literals, print_function, division
 
 from cms.utils.moderator import get_cmsplugin_queryset
+from django.forms.forms import NON_FIELD_ERRORS
 
 
 def get_nested_plugins(parent_plugin, include_self=False):

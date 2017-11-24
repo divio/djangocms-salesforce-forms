@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function, division
+
 from cms.api import add_plugin
 from cms.models import Placeholder
 from django.test import TestCase

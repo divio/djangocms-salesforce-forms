@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function, division
+
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from django.core.validators import MinLengthValidator
@@ -7,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.contrib.admin import TabularInline
 from django.conf import settings
+
 from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
 from .forms import FormPluginForm, RadioFieldForm, SelectFieldForm, BooleanFieldForm, TextAreaFieldForm, \
