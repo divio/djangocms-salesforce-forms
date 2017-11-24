@@ -48,3 +48,11 @@ Data Extension.
 
 
 https://help.marketingcloud.com/en/documentation/exacttarget/subscribers/web_collect/#section_16
+
+
+### Running tests
+
+```bash
+make setup
+make test
+```

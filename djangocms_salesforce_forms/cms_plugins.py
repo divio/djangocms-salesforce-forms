@@ -36,7 +36,9 @@ class FormPlugin(FieldContainer):
             context['form_success'] = True
             return context
         form = self.process_form(instance, request)
-        context['action_url'] = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
+        context['action_url'] = getattr(
+            settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx'
+        )
         context['error_url'] = request.build_absolute_uri(request.path)
         context['success_url'] = '{}?success=1'.format(request.build_absolute_uri(request.path))
         context['form'] = form
@@ -283,6 +285,17 @@ class Field(FormElement):
         ]
         return template_names
 
+    def get_sorted_options(self, instance):
+        try:
+            list(map(lambda x: float(x.strip()), instance.option_set.values_list('value', flat=True)))
+        except ValueError:
+            # values are not numeric: keep default A-Z sorting
+            return instance.option_set.all()
+        else:
+            # values are numeric: sort them as numbers
+            # "Cast('value', FloatField())"" is tempting but only works from Django 1.10 on.
+            return instance.option_set.extra({'numeric_value': "CAST(value as UNSIGNED)"}).order_by('numeric_value')
+
 
 class AbstractTextField(Field):
     form_field = forms.CharField
@@ -433,7 +446,7 @@ class SelectField(AbstractSelectField):
 
     def get_form_field_kwargs(self, instance):
         kwargs = super(SelectField, self).get_form_field_kwargs(instance)
-        kwargs['queryset'] = instance.option_set.all()
+        kwargs['queryset'] = self.get_sorted_options(instance)
         for opt in kwargs['queryset']:
             if opt.default_value:
                 kwargs['initial'] = opt.pk
@@ -471,7 +484,7 @@ class RadioSelectField(Field):
 
     def get_form_field_kwargs(self, instance):
         kwargs = super(RadioSelectField, self).get_form_field_kwargs(instance)
-        kwargs['queryset'] = instance.option_set.all()
+        kwargs['queryset'] = self.get_sorted_options(instance)
         kwargs['empty_label'] = None
         for opt in kwargs['queryset']:
             if opt.default_value:

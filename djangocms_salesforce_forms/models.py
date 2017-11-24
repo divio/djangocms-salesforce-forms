@@ -1,29 +1,25 @@
 # -*- coding: utf-8 -*-
-from django.utils.functional import cached_property
+from collections import namedtuple
 
 from cms.models import CMSPlugin, ValidationError
 from cms.models.fields import PageField
+from cms.utils.plugins import build_plugin_tree, downcast_plugins
+from django.conf import settings
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from djangocms_attributes_field.fields import AttributesField
-from django.conf import settings
-from collections import defaultdict, namedtuple
-try:
-    from django.utils.datastructures import SortedDict
-except ImportError:
-    from collections import OrderedDict as SortedDict
-from cms.utils.plugins import build_plugin_tree, downcast_plugins
+
 from .helpers import is_form_element
 
 FORM_TEMPLATE_SET = [
     ('default', _('Default'))
 ]
 FORM_TEMPLATE_SET += getattr(
-        settings,
-        'ALDRYN_SALESFORCE_TEMPLATES_FOLDER',
-        [],
-    )
-
+    settings,
+    'ALDRYN_SALESFORCE_TEMPLATES_FOLDER',
+    [],
+)
 FormField = namedtuple(
     'FormField',
     field_names=[
