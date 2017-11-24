@@ -8,6 +8,7 @@ from cms.models.fields import PageField
 from cms.utils.plugins import build_plugin_tree, downcast_plugins
 from django.conf import settings
 from django.db import models
+from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from djangocms_attributes_field.fields import AttributesField
@@ -364,17 +365,27 @@ class TextAreaFieldPlugin(FieldPluginBase):
 
 
 class Option(models.Model):
-    class Meta:
-        verbose_name = _('Option')
-        verbose_name_plural = _('Options')
-        ordering = ('value', )
-
     field = models.ForeignKey(FieldPlugin, editable=False)
     value = models.CharField(_('Value'), max_length=255)
     default_value = models.BooleanField(_('Default'), default=False)
+    position = models.PositiveIntegerField(_('Position'), blank=True)
+
+    class Meta:
+        unique_together = (('field', 'position'), )
+        ordering = ('position', )
 
     def __str__(self):
         return self.value
+
+    def set_position(self):
+        if self.position is None:
+            self.position = self.field.option_set.aggregate(
+                max_position=Coalesce(models.Max('position'), 0)
+            ).get('max_position', 0) + 10
+
+    def save(self, *args, **kwargs):
+        self.set_position()
+        return super(Option, self).save(*args, **kwargs)
 
 
 class FormButtonPlugin(CMSPlugin):
