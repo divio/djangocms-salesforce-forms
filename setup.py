@@ -1,6 +1,15 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function, division
 from setuptools import find_packages, setup
 
 import djangocms_salesforce_forms
+
+
+REQUIREMENTS = [
+    'django-cms>=3.4.5',
+    'djangocms-attributes-field>=0.3.0',
+    'six>=1.0',
+]
 
 
 setup(
@@ -16,12 +25,10 @@ setup(
         'Operating System :: OS Independent',
         'Topic :: Software Development'
     ],
-    install_requires=[],
-    # python 3.5 and up. But not python 4.
-    # https://packaging.python.org/tutorials/distributing-packages/#python-requires
-    python_requires='~=3.5',
+    install_requires=REQUIREMENTS,
     author='Divio AG',
     author_email='info@divio.ch',
     url='http://github.com/divio/djangocms-salesforce-forms',
     license='BSD',
+    test_suite='tests.settings.run',
 )

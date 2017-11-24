@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function, division
 
 
 def is_form_element(plugin):
-    # import here due because of circular imports
+    # import here in order to avoid circular imports
     from .cms_plugins import FormElement
 
     # cms_plugins.CMSPlugin subclass
