@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.contrib.admin import TabularInline
 from django.conf import settings
+import six
 
 from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
@@ -80,11 +81,12 @@ class FormPlugin(FieldContainer):
         Constructs form class basing on children plugin instances.
         """
         fields = cls.get_form_fields(instance)
-        formClass = (
-            type(FormSubmissionBaseForm)
-            ('FormSubmissionBaseForm', (FormSubmissionBaseForm,), fields)
-        )
-        return formClass
+
+        # six.b wouldn't solve here: "type() argument 1 must be" "str, not bytes (py3)" vs "string, not unicode (py2)"
+        if six.PY2:
+            return type(FormSubmissionBaseForm)((b'FormSubmissionBaseForm'), (FormSubmissionBaseForm, ), fields)
+        else:
+            return type(FormSubmissionBaseForm)(('FormSubmissionBaseForm'), (FormSubmissionBaseForm, ), fields)
 
     def get_success_url(self, instance):
         if instance.redirect_type == models.FormPlugin.REDIRECT_TO_PAGE:
