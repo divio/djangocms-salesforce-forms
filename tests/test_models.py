@@ -78,9 +78,9 @@ class OptionTestCase(TestCase):
 
     def test_position_is_not_nullable(self):
         self.field.option_set.create(position=950, value='950')
-        another_field = add_plugin(self.placeholder, 'SelectField', 'en')
 
         # Noise
+        another_field = add_plugin(self.placeholder, 'SelectField', 'en')
         another_field.option_set.create(position=1000, value='1000 for another field so it does not matter')
 
         option1 = self.field.option_set.create(position=1, value='test')
