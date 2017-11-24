@@ -19,8 +19,6 @@
             {{ instance.error_message|default:_('something went wrong') }}
         </div>
     {% endif %}
-
-
     <form
         method="post" action="{{ action_url }}"
         id="form-{{ instance.pk }}"
