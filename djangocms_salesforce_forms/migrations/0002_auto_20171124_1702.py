@@ -5,13 +5,26 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 
 
-class Migration(migrations.Migration):
+def forward_migration(apps, schema_editor):
+    FieldPlugin = apps.get_model('djangocms_salesforce_forms', 'FieldPlugin')
+    for field in FieldPlugin.objects.iterator():
+        for idx, option in enumerate(field.option_set.order_by('value'), start=1):
+            option.position = idx * 10
+            option.save()
 
+
+def backward_migration(apps, schema_editor):
+    Option = apps.get_model('djangocms_salesforce_forms', 'Option')
+    Option.objects.all().update(position=None)
+
+
+class Migration(migrations.Migration):
     dependencies = [
         ('djangocms_salesforce_forms', '0001_initial'),
     ]
 
     operations = [
+        # 1: create field as nullable
         migrations.AlterModelOptions(
             name='option',
             options={'ordering': ('position',)},
@@ -25,4 +38,15 @@ class Migration(migrations.Migration):
             name='option',
             unique_together=set([('field', 'position')]),
         ),
+
+        # 2: populate field
+        migrations.RunPython(forward_migration, backward_migration),
+
+        # 3: update field to non-nullable
+        migrations.AlterField(
+            model_name='option',
+            name='position',
+            field=models.PositiveIntegerField(blank=True, verbose_name='Position'),
+        ),
+
     ]
