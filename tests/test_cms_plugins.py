@@ -4,8 +4,9 @@ from __future__ import unicode_literals, print_function, division
 from cms.api import add_plugin
 from cms.models import Placeholder
 from django.test import TestCase
+from django.test.client import RequestFactory
 
-from djangocms_salesforce_forms.cms_plugins import Field as CMSPluginField
+from djangocms_salesforce_forms.cms_plugins import Field as CMSPluginField, FormPlugin
 
 
 class FieldOptionsOrderingTestCase(TestCase):
@@ -35,3 +36,33 @@ class FieldOptionsOrderingTestCase(TestCase):
 
     def test_sql_injection_safe(self):
         self.assertQuerysetOrdered(['value as UNSIGNED); DROP TABLE USER;'], ['value as UNSIGNED); DROP TABLE USER;'])
+
+
+class FormPluginSuccessErrorHandlingTestCase(TestCase):
+    def get_context(self, request):
+        placeholder = Placeholder.objects.create(slot='test')
+        field = add_plugin(placeholder, 'FormPlugin', 'en')
+
+        context = {'request': request}
+        return FormPlugin().render(context, field, placeholder)
+
+    def test_form_not_posted_yet(self):
+        request = RequestFactory().get('http://testserver/formpage')
+        context = self.get_context(request)
+
+        self.assertFalse('form_error' in context)
+        self.assertFalse('form_success' in context)
+
+    def test_form_posted_error_returned(self):
+        request = RequestFactory().get('http://testserver/formpage?errMsg=some+internal+salesforce+issue')
+        context = self.get_context(request)
+
+        self.assertTrue(context['form_error'])
+        self.assertFalse('form_success' in context)
+
+    def test_form_posted_successfully(self):
+        request = RequestFactory().get('http://testserver/formpage?success=1')
+        context = self.get_context(request)
+
+        self.assertFalse('form_error' in context)
+        self.assertTrue(context['form_success'])
