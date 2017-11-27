@@ -14,6 +14,11 @@
         {% endaddtoblock %}
     {% endif %}
 {% else %}
+    {% if form_error %}
+        <div class="submitted-message">
+            {{ instance.error_message|default:_('something went wrong') }}
+        </div>
+    {% endif %}
     <form
         method="post" action="{{ action_url }}"
         id="form-{{ instance.pk }}"
