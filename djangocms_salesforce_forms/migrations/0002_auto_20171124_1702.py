@@ -6,16 +6,18 @@ from django.db import migrations, models
 
 
 def forward_migration(apps, schema_editor):
+    db_alias = schema_editor.connection.alias
     FieldPlugin = apps.get_model('djangocms_salesforce_forms', 'FieldPlugin')
-    for field in FieldPlugin.objects.iterator():
+    for field in FieldPlugin.objects.using(db_alias).iterator():
         for idx, option in enumerate(field.option_set.order_by('value'), start=1):
             option.position = idx * 10
             option.save()
 
 
 def backward_migration(apps, schema_editor):
+    db_alias = schema_editor.connection.alias
     Option = apps.get_model('djangocms_salesforce_forms', 'Option')
-    Option.objects.all().update(position=None)
+    Option.objects.using(db_alias).all().update(position=None)
 
 
 class Migration(migrations.Migration):
