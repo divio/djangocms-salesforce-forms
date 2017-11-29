@@ -89,12 +89,3 @@ class OptionTestCase(TestCase):
         self.assertEquals(option1.position, 960)  # We force a value for it on Option.save
 
         self.assertRaises(IntegrityError, Option.objects.update, position=None)  # See? Not nullable
-
-    def test_unique_together(self):
-        option1 = self.field.option_set.create(position=1, value='test')
-
-        # Not an issue since is the same position (1) for different field (another_field)
-        another_field = add_plugin(self.placeholder, 'SelectField', 'en')
-        another_field.option_set.create(position=1, value='1 for another field so it does not matter')
-
-        self.assertRaises(IntegrityError, option1.field.option_set.create, position=option1.position, value='whatever')

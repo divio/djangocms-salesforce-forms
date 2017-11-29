@@ -371,7 +371,6 @@ class Option(models.Model):
     position = models.PositiveIntegerField(_('Position'), blank=True)
 
     class Meta:
-        unique_together = (('field', 'position'), )
         ordering = ('position', )
 
     def __str__(self):
