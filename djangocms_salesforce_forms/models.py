@@ -129,9 +129,11 @@ class FormPlugin(CMSPlugin):
         max_length=20,
         choices=REDIRECT_CHOICES,
         help_text=_(
-            'Where to redirect the user when the form has been successfully '
-            'sent?'
+            'Where to redirect the user when the form has been successfully sent? '
+            'Empty means "no redirect" (stays on same page, browser is not refreshed).'
         ),
+        blank=True,
+        null=True,
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)

@@ -15,6 +15,7 @@ HELPER_SETTINGS = {
         }]
     },
     'LANGUAGE_CODE': 'en',
+    'ROOT_URLCONF': 'djangocms_salesforce_forms.urls',  # FIXME: should be removed
 }
 
 

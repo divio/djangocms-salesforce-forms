@@ -69,6 +69,37 @@
             <input type="hidden" name="{{ name }}" value="{{ value }}" />
         {% endfor %}
     </form>
+
+    {% if not instance.redirect_type %}
+        {% addtoblock "js" %}<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>{% endaddtoblock %}
+        {% addtoblock "js" %}
+        <script type="text/javascript">
+            $("form").on("submit", function( event ) {
+                event.preventDefault();
+                data = $(this).serializeArray();
+                data.push({name: "__form_url", value: this.action});
+                data.push({name: "__form_method", value: this.method});
+
+                $.ajax({
+                    url: "/proxy_salesforce_request/",
+                    method: "POST",
+                    data: data,
+
+                }).done(function(){
+                    console.log('success');
+                    alert("{{ instance.success_message|default:_('thank you') }}");
+
+                }).fail(function(request){
+                    console.log('error');
+                    console.log(request.responseText);
+                    alert("{{ instance.error_message|default:_('something went wrong') }}");
+                });
+
+            });
+        </script>
+        {% endaddtoblock %}
+    {% endif %}
+
     {% comment %}
     {% addtoblock "js" %}<script src="{% static 'js/jquery-2.2.4.min.js' %}"></script>{% endaddtoblock %}
     {% addtoblock "js" %}<script src="{% static 'js/jquery.validate.min.js' %}"></script>{% endaddtoblock %}
