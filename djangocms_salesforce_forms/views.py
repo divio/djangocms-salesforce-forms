@@ -3,38 +3,31 @@ from six.moves.urllib.parse import urlparse, parse_qs
 import requests
 
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+
+from .forms import DjangoCMSSalesforceFormSubmitForm
 
 
-@csrf_exempt
-def proxy_salesforce_request(request):
+def djangocms_salesforce_form_submit(request):
     if request.method != 'POST':
         return JsonResponse({'message': 'Method now allowed'}, status=405)
 
-    posted_data = request.POST.dict().copy()
-
-    try:
-        method = posted_data.pop('__form_method')
-        url = posted_data.pop('__form_url')
-        assert method
-        assert url
-    except (KeyError, AssertionError):
+    metaform = DjangoCMSSalesforceFormSubmitForm(request.POST)
+    if not(metaform.is_valid()):
         return JsonResponse({'message': 'Invalid request'}, status=400)
 
     try:
-        response = requests.request(method, url, data=posted_data)
+        response = requests.request(
+            metaform.cleaned_data['_metaform_method'],
+            metaform.cleaned_data['_metaform_url'],
+            data=metaform.get_salesforce_data()
+        )
     except requests.exceptions.RequestException:
         return JsonResponse({'message': 'Request to salesforce failed'}, status=400)
 
     if not(response.ok):
-        return JsonResponse(
-            {'message': 'Response from salesforce was HTTP {}'.format(response.status_code)}, status=400
-        )
-
+        status_code = response.status_code
+        return JsonResponse({'message': 'Response from salesforce was HTTP {}'.format(status_code)}, status=400)
     elif parse_qs(urlparse(response.url).query).get('errMsg'):
-        return JsonResponse(
-            {'message': 'Response from salesforce was theoretically OK but with errMsg present'}, status=400
-        )
-
+        return JsonResponse({'message': 'Response from salesforce was OK but with errMsg present'}, status=400)
     else:
         return JsonResponse({'message': 'Response from salesforce was OK'})

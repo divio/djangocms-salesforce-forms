@@ -1,4 +1,5 @@
 import json
+
 import mock
 from requests.exceptions import RequestException
 
@@ -16,8 +17,8 @@ class ProxySalesforceRequestTestCase(TestCase):
 
         self.post_data = self.sales_force_post_data.copy()
         self.post_data.update({
-            '__form_method': 'post',
-            '__form_url': 'http://salesforce.example.com/form',
+            '_metaform_method': 'post',
+            '_metaform_url': 'http://salesforce.example.com/form',
         })
 
         self._request_patched = mock.patch(
@@ -35,7 +36,7 @@ class ProxySalesforceRequestTestCase(TestCase):
         self.assertEquals(json.loads(response.content.decode())['message'], message)
 
     def test_success(self):
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assertEquals(response.status_code, 200)
         self.request_patched.assert_called_once_with(
@@ -43,46 +44,46 @@ class ProxySalesforceRequestTestCase(TestCase):
         )
 
     def test_request_other_than_post(self):
-        response = self.client.get(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.get(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
         self.assertEquals(response.status_code, 405)
 
-        response = self.client.put(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.put(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
         self.assertEquals(response.status_code, 405)
 
-        response = self.client.patch(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.patch(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
         self.assertEquals(response.status_code, 405)
 
-        response = self.client.delete(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.delete(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
         self.assertEquals(response.status_code, 405)
 
     def test_form_url_missing(self):
-        del self.post_data['__form_url']
+        del self.post_data['_metaform_url']
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Invalid request')
         self.assertFalse(self.request_patched.called)
 
     def test_form_url_empty(self):
-        self.post_data['__form_url'] = ''
+        self.post_data['_metaform_url'] = ''
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Invalid request')
         self.assertFalse(self.request_patched.called)
 
     def test_form_method_missing(self):
-        del self.post_data['__form_method']
+        del self.post_data['_metaform_method']
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Invalid request')
         self.assertFalse(self.request_patched.called)
 
     def test_form_method_empty(self):
-        self.post_data['__form_method'] = ''
+        self.post_data['_metaform_method'] = ''
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Invalid request')
         self.assertFalse(self.request_patched.called)
@@ -90,7 +91,7 @@ class ProxySalesforceRequestTestCase(TestCase):
     def test_request_error(self):
         self.request_patched.side_effect = RequestException('Server exploded.')
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Request to salesforce failed')
 
@@ -98,13 +99,13 @@ class ProxySalesforceRequestTestCase(TestCase):
         self.request_patched.return_value.ok = False
         self.request_patched.return_value.status_code = 409
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
         self.assert400(response, 'Response from salesforce was HTTP 409')
 
     def test_response_with_errMsg(self):
         self.request_patched.return_value.url = 'http://x.com?errMsg=whatever'
 
-        response = self.client.post(reverse('proxy-salesforce-request'), self.post_data)
+        response = self.client.post(reverse('admin:djangocms-salesforce-form-submit'), self.post_data)
 
-        self.assert400(response, 'Response from salesforce was theoretically OK but with errMsg present')
+        self.assert400(response, 'Response from salesforce was OK but with errMsg present')

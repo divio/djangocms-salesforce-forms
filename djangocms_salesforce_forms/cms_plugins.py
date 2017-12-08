@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function, division
 
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
+from django.conf.urls import url
 from django.core.validators import MinLengthValidator
 from django.template.loader import select_template
 from django.utils.translation import ugettext_lazy as _
@@ -15,6 +16,7 @@ from .validators import MinChoicesValidator, MaxChoicesValidator
 from . import models
 from .forms import FormPluginForm, RadioFieldForm, SelectFieldForm, BooleanFieldForm, TextAreaFieldForm, \
     TextFieldForm, FormSubmissionBaseForm, MultipleSelectFieldForm
+from .views import djangocms_salesforce_form_submit
 
 
 class FormElement(CMSPluginBase):
@@ -99,6 +101,13 @@ class FormPlugin(FieldContainer):
         form_kwargs = self.get_form_kwargs(instance, request)
         form = form_class(**form_kwargs)
         return form
+
+    def get_plugin_urls(self):
+        return [url(
+            r'^djangocms-salesforce-form-submit/$',
+            djangocms_salesforce_form_submit,
+            name='djangocms-salesforce-form-submit'
+        )]
 
 
 class Fieldset(FieldContainer):

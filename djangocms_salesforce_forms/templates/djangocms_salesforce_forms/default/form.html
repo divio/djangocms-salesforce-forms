@@ -74,14 +74,16 @@
         {% addtoblock "js" %}<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>{% endaddtoblock %}
         {% addtoblock "js" %}
         <script type="text/javascript">
-            $("form").on("submit", function( event ) {
+            $("form").on("submit", function(event) {
                 event.preventDefault();
                 data = $(this).serializeArray();
-                data.push({name: "__form_url", value: this.action});
-                data.push({name: "__form_method", value: this.method});
+
+                data.push({name: "_metaform_url", value: this.action});
+                data.push({name: "_metaform_method", value: this.method});
+                data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
 
                 $.ajax({
-                    url: "/proxy_salesforce_request/",
+                    url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
                     method: "POST",
                     data: data,
 
