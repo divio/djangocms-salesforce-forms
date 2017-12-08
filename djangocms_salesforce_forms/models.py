@@ -133,7 +133,7 @@ class FormPlugin(CMSPlugin):
             'sent?'
         ),
     )
-    page = PageField(verbose_name=_('CMS Page'), blank=True, null=True)
+    page = PageField(verbose_name=_('CMS Page'), blank=True, null=True, on_delete=models.SET_NULL)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
     hidden_fields = CustomAttributesField(
         verbose_name=_('Hidden Fields'),
