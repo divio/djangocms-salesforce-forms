@@ -46,10 +46,14 @@ class FormPluginForm(forms.ModelForm):
                 if not page:
                     self.append_to_errors('page', _('Please provide CMS page for redirect.'))
                 self.cleaned_data['url'] = None
+
             if redirect_type == FormPlugin.REDIRECT_TO_URL:
                 if not url:
                     self.append_to_errors('url', _('Please provide an absolute URL for redirect.'))
                 self.cleaned_data['page'] = None
+        else:
+            self.cleaned_data['url'] = None
+            self.cleaned_data['page'] = None
 
         return self.cleaned_data
 

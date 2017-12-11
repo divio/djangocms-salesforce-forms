@@ -9,6 +9,7 @@ REQUIREMENTS = [
     'django-cms>=3.4.5',
     'djangocms-attributes-field>=0.3.0',
     'six>=1.0',
+    'requests',
 ]
 
 
