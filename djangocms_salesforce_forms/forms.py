@@ -9,25 +9,6 @@ from .models import FormPlugin
 from .utils import add_form_error
 
 
-class DjangoCMSSalesforceFormSubmitForm(forms.Form):
-    _metaform_method = forms.CharField()
-    _metaform_url = forms.URLField()
-
-    def __init__(self, data, *args, **kwargs):
-        self.raw_data = data.dict()
-        super(DjangoCMSSalesforceFormSubmitForm, self).__init__(data, *args, **kwargs)
-
-    def get_salesforce_data(self):
-        salesforce_data = self.raw_data.copy()
-
-        for field in self.declared_fields.keys():
-            salesforce_data.pop(field, None)
-
-        salesforce_data.pop('csrfmiddlewaretoken', None)
-
-        return salesforce_data
-
-
 class FormSubmissionBaseForm(forms.Form):
     language = forms.ChoiceField(
         choices=settings.LANGUAGES,

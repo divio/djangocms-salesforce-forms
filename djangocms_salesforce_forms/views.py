@@ -2,25 +2,17 @@ from six.moves.urllib.parse import urlparse, parse_qs
 
 import requests
 
+from django.conf import settings
 from django.http import JsonResponse
-
-from .forms import DjangoCMSSalesforceFormSubmitForm
 
 
 def djangocms_salesforce_form_submit(request):
     if request.method != 'POST':
         return JsonResponse({'message': 'Method now allowed'}, status=405)
 
-    metaform = DjangoCMSSalesforceFormSubmitForm(request.POST)
-    if not(metaform.is_valid()):
-        return JsonResponse({'message': 'Invalid request'}, status=400)
-
+    url = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
     try:
-        response = requests.request(
-            metaform.cleaned_data['_metaform_method'],
-            metaform.cleaned_data['_metaform_url'],
-            data=metaform.get_salesforce_data()
-        )
+        response = requests.post(url, data=request.POST.dict())
     except requests.exceptions.RequestException:
         return JsonResponse({'message': 'Request to salesforce failed'}, status=400)
 

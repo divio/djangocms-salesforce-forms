@@ -77,9 +77,6 @@
             $("form").on("submit", function(event) {
                 event.preventDefault();
                 data = $(this).serializeArray();
-
-                data.push({name: "_metaform_url", value: this.action});
-                data.push({name: "_metaform_method", value: this.method});
                 data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
 
                 $.ajax({
