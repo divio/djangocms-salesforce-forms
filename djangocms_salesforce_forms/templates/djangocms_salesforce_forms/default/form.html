@@ -78,19 +78,19 @@
                 script.type = "text/javascript";
                 script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
                 script.onload = function(){
-                    $(prepareFormSubmitCallback("{{ instance.pk }}"))
+                    $(prepareFormSubmitCallback{{ instance.pk }})
                 };
                 document.getElementsByTagName("head")[0].appendChild(script);
 
             } else {
                 $(function(){
-                    $(prepareFormSubmitCallback("{{ instance.pk }}"));
+                    $(prepareFormSubmitCallback{{ instance.pk }});
                 });
 
             }
 
-            var prepareFormSubmitCallback = function(formId){
-                $("#form-" + formId).on("submit", function(event) {
+            var prepareFormSubmitCallback{{ instance.pk }} = function(){
+                $("#form-{{ instance.pk }}").on("submit", function(event) {
                     event.preventDefault();
                     var data = $(this).serializeArray();
                     data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
