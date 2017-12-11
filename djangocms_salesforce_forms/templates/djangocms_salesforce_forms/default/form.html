@@ -71,30 +71,46 @@
     </form>
 
     {% if not instance.redirect_type %}
-        {% addtoblock "js" %}<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>{% endaddtoblock %}
         {% addtoblock "js" %}
         <script type="text/javascript">
-            $("form").on("submit", function(event) {
-                event.preventDefault();
-                data = $(this).serializeArray();
-                data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
+            if (!window.jQuery){
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
+                script.onload = function(){
+                    $(prepareFormSubmitCallback)
+                };
+                document.getElementsByTagName("head")[0].appendChild(script);
 
-                $.ajax({
-                    url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
-                    method: "POST",
-                    data: data,
-
-                }).done(function(){
-                    console.log('success');
-                    alert("{{ instance.success_message|default:_('thank you') }}");
-
-                }).fail(function(request){
-                    console.log('error');
-                    console.log(request.responseText);
-                    alert("{{ instance.error_message|default:_('something went wrong') }}");
+            } else {
+                $(document).ready(function(){
+                    $(prepareFormSubmitCallback);
                 });
 
-            });
+            }
+
+            var prepareFormSubmitCallback = function(){
+                $("#form-{{ instance.pk }}").on("submit", function(event) {
+                    event.preventDefault();
+                    var data = $(this).serializeArray();
+                    data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
+
+                    $.ajax({
+                        url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
+                        method: "POST",
+                        data: data
+
+                    }).done(function(){
+                        console.log('success');
+                        alert("{{ instance.success_message|default:_('thank you') }}");
+
+                    }).fail(function(request){
+                        console.log('error');
+                        console.log(request.responseText);
+                        alert("{{ instance.error_message|default:_('something went wrong') }}");
+                    });
+                });
+            }
         </script>
         {% endaddtoblock %}
     {% endif %}
