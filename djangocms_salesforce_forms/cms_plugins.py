@@ -95,6 +95,8 @@ class FormPlugin(FieldContainer):
             return instance.page.get_absolute_url()
         elif instance.redirect_type == models.FormPlugin.REDIRECT_TO_URL:
             return instance.url
+        else:
+            raise RuntimeError('Form is not configured properly.')
 
     def process_form(self, instance, request):
         form_class = self.get_form_class(instance)

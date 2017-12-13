@@ -1,7 +1,7 @@
 {% load i18n staticfiles cms_tags sekizai_tags %}
 
 {% if form_success %}
-    <div class="submitted-message">
+    <div id="message" class="submitted-message">
         {{ instance.success_message|default:_('thank you') }}
     </div>
     {% if instance.success_url %}
@@ -14,11 +14,10 @@
         {% endaddtoblock %}
     {% endif %}
 {% else %}
-    {% if form_error %}
-        <div class="submitted-message">
-            {{ instance.error_message|default:_('something went wrong') }}
-        </div>
-    {% endif %}
+    <div id="message" class="submitted-message error-message"{% if not form_error %} style="display:none;"{% endif %}>
+        {{ instance.error_message|default:_('something went wrong') }}
+    </div>
+
     <form
         method="post" action="{{ action_url }}"
         id="form-{{ instance.pk }}"
@@ -70,50 +69,51 @@
         {% endfor %}
     </form>
 
-    {% if not instance.redirect_type %}
-        {% addtoblock "js" %}
-        <script type="text/javascript">
-            if (!window.jQuery){
-                var script = document.createElement("script");
-                script.type = "text/javascript";
-                script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
-                script.onload = function(){
-                    $(prepareFormSubmitCallback{{ instance.pk }})
-                };
-                document.getElementsByTagName("head")[0].appendChild(script);
+    {% addtoblock "js" %}
+    <script type="text/javascript">
+        if (!window.jQuery){
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
+            script.onload = function(){
+                $(prepareFormSubmitCallback{{ instance.pk }});
+            };
+            document.getElementsByTagName("head")[0].appendChild(script);
 
-            } else {
-                $(function(){
-                    $(prepareFormSubmitCallback{{ instance.pk }});
+        } else {
+            $(function(){
+                $(prepareFormSubmitCallback{{ instance.pk }});
+            });
+
+        }
+
+        var prepareFormSubmitCallback{{ instance.pk }} = function(){
+            $("#form-{{ instance.pk }}").on("submit", function(event) {
+                event.preventDefault();
+                var data = $(this).serializeArray();
+                data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
+
+                $.ajax({
+                    url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
+                    method: "POST",
+                    data: data
+
+                }).done(function(){
+                    console.log('success');
+                    window.location.href = '{{ instance.success_url }}?success=1#message';
+
+                }).fail(function(request){
+                    console.log('error');
+                    console.log(request.responseText);
+                    $('.error-message').show();
+                    $('html, body').animate({
+                        scrollTop: $(".error-message").offset().top - 100
+                    }, 500);
                 });
-
-            }
-
-            var prepareFormSubmitCallback{{ instance.pk }} = function(){
-                $("#form-{{ instance.pk }}").on("submit", function(event) {
-                    event.preventDefault();
-                    var data = $(this).serializeArray();
-                    data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
-
-                    $.ajax({
-                        url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
-                        method: "POST",
-                        data: data
-
-                    }).done(function(){
-                        console.log('success');
-                        alert("{{ instance.success_message|default:_('thank you') }}");
-
-                    }).fail(function(request){
-                        console.log('error');
-                        console.log(request.responseText);
-                        alert("{{ instance.error_message|default:_('something went wrong') }}");
-                    });
-                });
-            }
-        </script>
-        {% endaddtoblock %}
-    {% endif %}
+            });
+        }
+    </script>
+    {% endaddtoblock %}
 
     {% comment %}
     {% addtoblock "js" %}<script src="{% static 'js/jquery-2.2.4.min.js' %}"></script>{% endaddtoblock %}

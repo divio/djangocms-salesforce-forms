@@ -11,8 +11,11 @@ def djangocms_salesforce_form_submit(request):
         return JsonResponse({'message': 'Method now allowed'}, status=405)
 
     url = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
+    salesforce_post_data = request.POST.dict()
+    salesforce_post_data.pop('csrfmiddlewaretoken', None)
+
     try:
-        response = requests.post(url, data=request.POST.dict())
+        response = requests.post(url, data=salesforce_post_data)
     except requests.exceptions.RequestException:
         return JsonResponse({'message': 'Request to salesforce failed'}, status=400)
 
