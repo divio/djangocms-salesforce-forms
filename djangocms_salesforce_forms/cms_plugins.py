@@ -39,13 +39,6 @@ class FormPlugin(FieldContainer):
         context = super(FormPlugin, self).render(context, instance, placeholder)
         request = context['request']
 
-        if request.GET.get('success') == '1':
-            context['form_success'] = True
-            return context
-
-        if request.GET.get('errMsg'):
-            context['form_error'] = True
-
         form = self.process_form(instance, request)
         context['action_url'] = getattr(
             settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx'

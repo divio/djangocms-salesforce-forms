@@ -1,156 +1,138 @@
 {% load i18n staticfiles cms_tags sekizai_tags %}
+<div id="message-{{ instance.pk }}" class="submitted-message" style="display:none;"></div>
 
-{% if form_success %}
-    <div id="message" class="submitted-message">
-        {{ instance.success_message|default:_('thank you') }}
-    </div>
-    {% if instance.success_url %}
-        {% addtoblock "js" %}
-            <script>
+<form
+    method="post" action="{{ action_url }}"
+    id="form-{{ instance.pk }}"
+    role="form"
+    {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
+    class="form {{ instance.custom_classes }}">
+    <input type="hidden" name="_clientID" value="{{ instance.client_id }}">
+    <input type="hidden" name="_deExternalKey" value="{{ instance.external_key }}">
+    <input type="hidden" name="_successURL" value="{{ success_url }}">
+    <input type="hidden" name="_errorURL" value="{{ error_url }}">
+    <input type="hidden" name="SubscriberKey" id="SubscriberKey">
+    {% addtoblock "js" %}
+        <script defer>
+            var email = document.getElementById('id_EmailAddress');
+            document.getElementById('SubscriberKey').value = email.value;
+            email.onchange = function () {
+                document.getElementById('SubscriberKey').value = this.value;
+            }
+        </script>
+    {% endaddtoblock %}
+    <input type="hidden" name="_action" value="add">
+    <input type="hidden" name="_returnXML" value="0">
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+
+    {% for plugin in instance.child_plugin_instances %}
+        {% render_plugin plugin %}
+    {% endfor %}
+
+    {% for field in form.hidden_fields %}
+        {{ field }}
+    {% endfor %}
+    {% for name, value in instance.hidden_fields.items %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}" />
+    {% endfor %}
+</form>
+
+{% addtoblock "js" %}
+<script type="text/javascript">
+    function show_message(message){
+        var element = $("#message-{{ instance.pk }}");
+        element.text(message);
+        element.show();
+        $("html, body").animate({
+            scrollTop: element.offset().top - 100
+        }, 500);
+    }
+
+    if (!window.jQuery){
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
+        script.onload = function(){
+            $(prepareFormSubmitCallback{{ instance.pk }});
+        };
+        document.getElementsByTagName("head")[0].appendChild(script);
+
+    } else {
+        $(function(){
+            $(prepareFormSubmitCallback{{ instance.pk }});
+        });
+
+    }
+
+    var prepareFormSubmitCallback{{ instance.pk }} = function(){
+        $("#form-{{ instance.pk }}").on("submit", function(event) {
+            event.preventDefault();
+            var data = $(this).serializeArray();
+            data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
+
+            $.ajax({
+                url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
+                method: "POST",
+                data: data
+
+            }).done(function(){
+                console.log("success");
+                show_message("{{ instance.success_message|default:_('thank you') }}");
                 setTimeout(function () {
                     window.location.href = '{{ instance.success_url }}';
-                }, 2000);
-            </script>
-        {% endaddtoblock %}
-    {% endif %}
-{% else %}
-    <div id="message" class="submitted-message error-message"{% if not form_error %} style="display:none;"{% endif %}>
-        {{ instance.error_message|default:_('something went wrong') }}
-    </div>
+                }, 3000);
 
-    <form
-        method="post" action="{{ action_url }}"
-        id="form-{{ instance.pk }}"
-        role="form"
-        {% if instance.form_attributes %} {{ instance.form_attributes_str }}{% endif %}
-        class="form {{ instance.custom_classes }}">
-        <input type="hidden" name="_clientID" value="{{ instance.client_id }}">
-        <input type="hidden" name="_deExternalKey" value="{{ instance.external_key }}">
-        <input type="hidden" name="_successURL" value="{{ success_url }}">
-        <input type="hidden" name="_errorURL" value="{{ error_url }}">
-        <input type="hidden" name="SubscriberKey" id="SubscriberKey">
-        {% addtoblock "js" %}
-            <script defer>
-                var email = document.getElementById('id_EmailAddress');
-                document.getElementById('SubscriberKey').value = email.value;
-                email.onchange = function () {
-                    document.getElementById('SubscriberKey').value = this.value;
-                }
-            </script>
-        {% endaddtoblock %}
-        <input type="hidden" name="_action" value="add">
-        <input type="hidden" name="_returnXML" value="0">
+            }).fail(function(request){
+                console.log("error");
+                console.log(request.responseText);
+                show_message("{{ instance.error_message|default:_('something went wrong') }}");
 
-        {% if form.non_field_errors %}
-            {% for error in form.non_field_errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
-        {% endif %}
-
-        {% if form_success_url %}
-            <p>
-                {% blocktrans %}
-                    Thank you for submitting your information, you will be
-                    <a href="{{ form_success_url }}">redirected shortly</a>.
-                {% endblocktrans %}
-            </p>
-        {% endif %}
-
-        {% if not form_success_url %}
-            {% for plugin in instance.child_plugin_instances %}
-                {% render_plugin plugin %}
-            {% endfor %}
-        {% endif %}
-        {% for field in form.hidden_fields %}
-            {{ field }}
-        {% endfor %}
-        {% for name, value in instance.hidden_fields.items %}
-            <input type="hidden" name="{{ name }}" value="{{ value }}" />
-        {% endfor %}
-    </form>
-
-    {% addtoblock "js" %}
-    <script type="text/javascript">
-        if (!window.jQuery){
-            var script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = "https://code.jquery.com/jquery-3.2.1.min.js";
-            script.onload = function(){
-                $(prepareFormSubmitCallback{{ instance.pk }});
-            };
-            document.getElementsByTagName("head")[0].appendChild(script);
-
-        } else {
-            $(function(){
-                $(prepareFormSubmitCallback{{ instance.pk }});
-            });
-
-        }
-
-        var prepareFormSubmitCallback{{ instance.pk }} = function(){
-            $("#form-{{ instance.pk }}").on("submit", function(event) {
-                event.preventDefault();
-                var data = $(this).serializeArray();
-                data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
-
-                $.ajax({
-                    url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
-                    method: "POST",
-                    data: data
-
-                }).done(function(){
-                    console.log('success');
-                    window.location.href = '{{ instance.success_url }}?success=1#message';
-
-                }).fail(function(request){
-                    console.log('error');
-                    console.log(request.responseText);
-                    $('.error-message').show();
-                    $('html, body').animate({
-                        scrollTop: $(".error-message").offset().top - 100
-                    }, 500);
-                });
-            });
-        }
-    </script>
-    {% endaddtoblock %}
-
-    {% comment %}
-    {% addtoblock "js" %}<script src="{% static 'js/jquery-2.2.4.min.js' %}"></script>{% endaddtoblock %}
-    {% addtoblock "js" %}<script src="{% static 'js/jquery.validate.min.js' %}"></script>{% endaddtoblock %}
-    {% addtoblock "js" %}
-    <script type="text/javascript">
-        $.validator.addMethod( "pattern", function( value, element, param ) {
-            if ( this.optional( element ) ) {
-                return true;
-            }
-            if ( typeof param === "string" ) {
-                param = new RegExp( "^(?:" + param + ")$" );
-            }
-            return param.test( value );
-        }, "Invalid format." );
-        $.validator.messages['required'] = 'Please complete this mandatory field.';
-        $(function () {
-            $('.js-form-{{ instance.pk }}').validate({
-                messages: {
-                    'Phone Number': {
-                        pattern: 'Must be a valid phone number.  Must contain only numbers, +()-. and x.'
-                    }
-                },
-                rules: {
-                    'Phone Number': {
-                        required: true,
-                        pattern: '[\\d+\\-\\(\\)x]+'
-                    }
-                },
-                errorPlacement: function(error, element) {
-                    var errorWrapper = error.wrap('<ul class="hs-error-msgs inputs-list"><li></li></ul>').closest('ul');
-
-                    element.closest('div').after(errorWrapper)
-                }
             });
         });
-    </script>
-    {% endaddtoblock %}
-    {% endcomment %}
-{% endif %}
+    }
+</script>
+{% endaddtoblock %}
+
+{% comment %}
+{% addtoblock "js" %}<script src="{% static 'js/jquery-2.2.4.min.js' %}"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static 'js/jquery.validate.min.js' %}"></script>{% endaddtoblock %}
+{% addtoblock "js" %}
+<script type="text/javascript">
+    $.validator.addMethod( "pattern", function( value, element, param ) {
+        if ( this.optional( element ) ) {
+            return true;
+        }
+        if ( typeof param === "string" ) {
+            param = new RegExp( "^(?:" + param + ")$" );
+        }
+        return param.test( value );
+    }, "Invalid format." );
+    $.validator.messages['required'] = 'Please complete this mandatory field.';
+    $(function () {
+        $('.js-form-{{ instance.pk }}').validate({
+            messages: {
+                'Phone Number': {
+                    pattern: 'Must be a valid phone number.  Must contain only numbers, +()-. and x.'
+                }
+            },
+            rules: {
+                'Phone Number': {
+                    required: true,
+                    pattern: '[\\d+\\-\\(\\)x]+'
+                }
+            },
+            errorPlacement: function(error, element) {
+                var errorWrapper = error.wrap('<ul class="hs-error-msgs inputs-list"><li></li></ul>').closest('ul');
+
+                element.closest('div').after(errorWrapper)
+            }
+        });
+    });
+</script>
+{% endaddtoblock %}
+{% endcomment %}
