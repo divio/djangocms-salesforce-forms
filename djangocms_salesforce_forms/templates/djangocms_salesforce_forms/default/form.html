@@ -44,8 +44,7 @@
 
 {% addtoblock "js" %}
 <script type="text/javascript">
-    function show_message(message){
-        var element = $("#message-{{ instance.pk }}");
+    function show_message(element, message){
         element.text(message);
         element.show();
         $("html, body").animate({
@@ -73,6 +72,7 @@
         $("#form-{{ instance.pk }}").on("submit", function(event) {
             event.preventDefault();
             var data = $(this).serializeArray();
+            var message_element = $("#message-{{ instance.pk }}");
             data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
 
             $.ajax({
@@ -82,7 +82,7 @@
 
             }).done(function(){
                 console.log("success");
-                show_message("{{ instance.success_message|default:_('thank you') }}");
+                show_message(message_element, "{{ instance.success_message|default:_('thank you') }}");
                 setTimeout(function () {
                     window.location.href = '{{ instance.success_url }}';
                 }, 3000);
@@ -90,7 +90,7 @@
             }).fail(function(request){
                 console.log("error");
                 console.log(request.responseText);
-                show_message("{{ instance.error_message|default:_('something went wrong') }}");
+                show_message(message_element, "{{ instance.error_message|default:_('something went wrong') }}");
 
             });
         });
