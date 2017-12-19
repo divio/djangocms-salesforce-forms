@@ -84,12 +84,7 @@ class FormPlugin(FieldContainer):
             return type(FormSubmissionBaseForm)(('FormSubmissionBaseForm'), (FormSubmissionBaseForm, ), fields)
 
     def get_success_url(self, instance):
-        if instance.redirect_type == models.FormPlugin.REDIRECT_TO_PAGE:
-            return instance.page.get_absolute_url()
-        elif instance.redirect_type == models.FormPlugin.REDIRECT_TO_URL:
-            return instance.url
-        else:
-            raise RuntimeError('Form is not configured properly.')
+        return instance.success_url
 
     def process_form(self, instance, request):
         form_class = self.get_form_class(instance)

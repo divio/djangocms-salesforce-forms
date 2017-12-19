@@ -129,6 +129,8 @@ class FormPlugin(CMSPlugin):
         max_length=20,
         choices=REDIRECT_CHOICES,
         help_text=_('Where to redirect the user when the form has been successfully sent?'),
+        blank=True,
+        null=True,
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True, on_delete=models.SET_NULL)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
@@ -149,8 +151,6 @@ class FormPlugin(CMSPlugin):
             return self.page.get_absolute_url()
         elif self.redirect_type == FormPlugin.REDIRECT_TO_URL and self.url:
             return self.url
-        else:
-            return ''
 
     def get_form_fields(self):
         from .cms_plugins import Field

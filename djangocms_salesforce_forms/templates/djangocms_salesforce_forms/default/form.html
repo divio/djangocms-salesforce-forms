@@ -45,7 +45,7 @@
 {% addtoblock "js" %}
 <script type="text/javascript">
     function show_message(element, message){
-        element.text(message);
+        element.html(message);
         element.show();
         window.location.hash = element.attr('id');
     }
@@ -82,10 +82,17 @@
             }).done(function(){
                 console.log("success");
                 form.hide();
-                show_message(message_element, "{{ instance.success_message|default:_('thank you') }}");
-                setTimeout(function () {
-                    window.location.href = '{{ instance.success_url }}';
-                }, 3000);
+
+                var success_message = "{{ instance.success_message|default:_('thank you')|escape }}";
+
+                {% if instance.success_url %}
+                    success_message += "<br>You will be redirected shortly. If it doesn't, click <a href='{{ instance.success_url }}'>here</a>."
+                    setTimeout(function(){
+                        window.location.href = '{{ instance.success_url }}';
+                    }, 5000);
+                {% endif %}
+
+                show_message(message_element, success_message);
 
             }).fail(function(request){
                 console.log("error");
