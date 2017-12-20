@@ -13,7 +13,8 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from djangocms_attributes_field.fields import AttributesField
 
-from .helpers import is_form_element
+from aldryn_forms.helpers import is_form_element
+
 
 FORM_TEMPLATE_SET = [
     ('default', _('Default'))

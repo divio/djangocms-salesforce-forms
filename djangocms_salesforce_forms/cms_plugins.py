@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function, division
 
 from cms.plugin_base import CMSPluginBase
-from cms.plugin_pool import plugin_pool
 from django.conf.urls import url
 from django.core.validators import MinLengthValidator
 from django.template.loader import select_template
@@ -10,12 +9,12 @@ from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.contrib.admin import TabularInline
 from django.conf import settings
-import six
 
-from .validators import MinChoicesValidator, MaxChoicesValidator
+from aldryn_forms.forms import BooleanFieldForm, MultipleSelectFieldForm, RadioFieldForm, SelectFieldForm, TextAreaFieldForm
+from aldryn_forms.validators import MinChoicesValidator, MaxChoicesValidator
+
 from . import models
-from .forms import FormPluginForm, RadioFieldForm, SelectFieldForm, BooleanFieldForm, TextAreaFieldForm, \
-    TextFieldForm, FormSubmissionBaseForm, MultipleSelectFieldForm
+from .forms import FormPluginForm, TextFieldForm
 from .views import djangocms_salesforce_form_submit
 
 
@@ -49,39 +48,12 @@ class FormPlugin(FieldContainer):
 
         return context
 
-    def get_render_template(self, context, instance, placeholder):
-        return instance.form_template
-
-    @classmethod
-    def get_form_fields(cls, instance):
-        form_fields = {}
-        fields = instance.get_form_fields()
-
-        for field in fields:
-            plugin_instance = field.plugin_instance
-            field_plugin = plugin_instance.get_plugin_class_instance()
-            form_fields[field.name] = field_plugin.get_form_field(plugin_instance)
-        return form_fields
-
     def get_form_kwargs(self, instance, request):
         kwargs = {
             'form_plugin': instance,
             'request': request,
         }
         return kwargs
-
-    @classmethod
-    def get_form_class(cls, instance):
-        """
-        Constructs form class basing on children plugin instances.
-        """
-        fields = cls.get_form_fields(instance)
-
-        # six.b wouldn't solve here: "type() argument 1 must be" "str, not bytes (py3)" vs "string, not unicode (py2)"
-        if six.PY2:
-            return type(FormSubmissionBaseForm)((b'FormSubmissionBaseForm'), (FormSubmissionBaseForm, ), fields)
-        else:
-            return type(FormSubmissionBaseForm)(('FormSubmissionBaseForm'), (FormSubmissionBaseForm, ), fields)
 
     def get_success_url(self, instance):
         return instance.success_url
@@ -538,14 +510,3 @@ class SubmitButton(FormElement):
     require_parent = True
     parent_classes = ['FormPlugin']
     form_field_type = 'submit_button'
-
-
-plugin_pool.register_plugin(FormPlugin)
-plugin_pool.register_plugin(Fieldset)
-plugin_pool.register_plugin(BooleanField)
-plugin_pool.register_plugin(RadioSelectField)
-plugin_pool.register_plugin(SelectField)
-plugin_pool.register_plugin(SubmitButton)
-plugin_pool.register_plugin(TextAreaField)
-plugin_pool.register_plugin(TextField)
-plugin_pool.register_plugin(MultipleCheckboxSelectField)
