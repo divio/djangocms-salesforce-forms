@@ -51,6 +51,9 @@ class FormPluginForm(forms.ModelForm):
                 if not url:
                     self.append_to_errors('url', _('Please provide an absolute URL for redirect.'))
                 self.cleaned_data['page'] = None
+        else:
+            self.cleaned_data['url'] = None
+            self.cleaned_data['page'] = None
 
         return self.cleaned_data
 
