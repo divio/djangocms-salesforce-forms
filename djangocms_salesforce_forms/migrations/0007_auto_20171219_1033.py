@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='formplugin',
             name='redirect_type',
-            field=models.CharField(blank=True, choices=[('redirect_to_page', 'CMS Page'), ('redirect_to_url', 'Absolute URL')], help_text='Where to redirect the user when the form has been successfully sent?', max_length=20, null=True, verbose_name='Redirect to'),
+            field=models.CharField(blank=True, choices=[('redirect_to_page', 'CMS Page'), ('redirect_to_url', 'Absolute URL')], help_text='Where to redirect the user when the form has been successfully sent?', max_length=20, verbose_name='Redirect to'),
         ),
     ]

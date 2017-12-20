@@ -130,7 +130,6 @@ class FormPlugin(CMSPlugin):
         choices=REDIRECT_CHOICES,
         help_text=_('Where to redirect the user when the form has been successfully sent?'),
         blank=True,
-        null=True,
     )
     page = PageField(verbose_name=_('CMS Page'), blank=True, null=True, on_delete=models.SET_NULL)
     url = models.URLField(_('Absolute URL'), blank=True, null=True)
