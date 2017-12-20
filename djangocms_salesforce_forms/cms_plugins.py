@@ -10,11 +10,13 @@ from django import forms
 from django.contrib.admin import TabularInline
 from django.conf import settings
 
-from aldryn_forms.forms import BooleanFieldForm, MultipleSelectFieldForm, RadioFieldForm, SelectFieldForm, TextAreaFieldForm
+from aldryn_forms.forms import (
+    BooleanFieldForm, MultipleSelectFieldForm, RadioFieldForm, SelectFieldForm, TextAreaFieldForm, FormPluginForm
+)
 from aldryn_forms.validators import MinChoicesValidator, MaxChoicesValidator
 
 from . import models
-from .forms import FormPluginForm, TextFieldForm
+from .forms import TextFieldForm
 from .views import djangocms_salesforce_form_submit
 
 
