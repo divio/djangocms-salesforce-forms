@@ -1,10 +1,13 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function, division
-
-from aldryn_forms.forms import TextFieldForm as BaseTextFieldForm
+from aldryn_forms.forms import FormPluginForm
 
 
-class TextFieldForm(BaseTextFieldForm):
-    class Meta:
-        fields = ['label', 'type', 'placeholder_text', 'help_text',
-                  'min_value', 'max_value', 'required', 'required_message', 'custom_classes']
+class SalesforcePluginForm(FormPluginForm):
+
+    defaults = {
+        'storage_backend': 'no_storage',
+        'form_template': 'aldryn_forms/salesforceform/form.html',
+    }
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('initial', {}).update(self.defaults)
+        super(SalesforcePluginForm, self).__init__(*args, **kwargs)
