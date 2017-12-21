@@ -67,23 +67,28 @@
     }
 
     var prepareFormSubmitCallback{{ instance.pk }} = function(){
+        var log = function (msg) {
+            if (!window.console || !window.console.log) {
+                return;
+            }
+            console.log(msg);
+        }
         $("#form-{{ instance.pk }}").on("submit", function(event) {
             event.preventDefault();
             var form = $(this);
             var data = form.serializeArray();
             var message_element = $("#message-{{ instance.pk }}");
+
             data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
 
             $.ajax({
                 url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
                 method: "POST",
                 data: data
-
             }).done(function(){
-                console.log("success");
                 form.hide();
 
-                var success_message = "{{ instance.success_message|default:_('thank you')|escape }}";
+                var success_message = "{{ instance.success_message|safe|default:_('thank you')|escapejs }}";
 
                 {% if instance.success_url %}
                     success_message += "<br>You will be redirected shortly. If it doesn't, click <a href='{{ instance.success_url }}'>here</a>."
@@ -93,12 +98,10 @@
                 {% endif %}
 
                 show_message(message_element, success_message);
-
             }).fail(function(request){
-                console.log("error");
-                console.log(request.responseText);
-                show_message(message_element, "{{ instance.error_message|default:_('something went wrong') }}");
-
+                log("error");
+                log(request.responseText);
+                show_message(message_element, "{{ instance.error_message|safe|default:_('something went wrong')|escapejs }}");
             });
         });
     }
