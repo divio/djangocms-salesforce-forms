@@ -35,7 +35,7 @@ class SalesforceForm(FormPlugin):
             'fields': (
                 'error_message',
                 'success_message',
-                'storage_backend',
+                'action_backend',
                 'custom_classes',
                 'form_attributes',
             )
