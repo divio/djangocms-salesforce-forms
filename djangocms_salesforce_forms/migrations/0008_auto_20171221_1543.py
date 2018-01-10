@@ -8,8 +8,6 @@ from django.db import models
 
 from treebeard.numconv import NumConv
 
-import aldryn_forms.storage_backends
-
 
 STEPLEN = 4
 ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -193,7 +191,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='formplugin',
             name='storage_backend',
-            field=models.CharField(choices=aldryn_forms.utils.storage_backend_choices(), default='default',
+            field=models.CharField(choices=[], default='default',
                                    max_length=15, verbose_name='Storage backend'),
         ),
     ]

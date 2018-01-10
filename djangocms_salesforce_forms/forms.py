@@ -4,7 +4,7 @@ from aldryn_forms.forms import FormPluginForm
 class SalesforcePluginForm(FormPluginForm):
 
     defaults = {
-        'storage_backend': 'no_storage',
+        'action_backend': 'none',
         'form_template': 'aldryn_forms/salesforceform/form.html',
     }
 
