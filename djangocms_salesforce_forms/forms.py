@@ -9,5 +9,6 @@ class SalesforcePluginForm(FormPluginForm):
     }
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('initial', {}).update(self.defaults)
+        if not kwargs.get('instance'):
+            kwargs.setdefault('initial', {}).update(self.defaults)
         super(SalesforcePluginForm, self).__init__(*args, **kwargs)
