@@ -15,6 +15,7 @@ from .views import djangocms_salesforce_form_submit
 
 
 class SalesforceForm(FormPlugin):
+    cache = True
     name = _('Salesforce Form')
     form = SalesforcePluginForm
     model = SalesforceFormPlugin
