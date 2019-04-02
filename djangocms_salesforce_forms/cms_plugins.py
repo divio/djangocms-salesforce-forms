@@ -5,6 +5,7 @@ from django.conf.urls import url
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
+from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 
 from aldryn_forms.cms_plugins import FormPlugin
@@ -56,6 +57,11 @@ class SalesforceForm(FormPlugin):
         return [plugin for plugin in plugin_types if plugin not in cls.unsupported_fields]
 
     def render(self, context, instance, placeholder):
+        # monkeypatch aldryn forms to enable caching for all
+        # nested plugins once a salesforce form is present
+        import aldryn_forms.cms_plugins
+        aldryn_forms.cms_plugins.FormElement.cache = True
+
         request = context['request']
         context = super(SalesforceForm, self).render(context, instance, placeholder)
         context['action_url'] = getattr(
