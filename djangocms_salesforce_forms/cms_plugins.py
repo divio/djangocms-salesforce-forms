@@ -56,6 +56,11 @@ class SalesforceForm(FormPlugin):
         return [plugin for plugin in plugin_types if plugin not in cls.unsupported_fields]
 
     def render(self, context, instance, placeholder):
+        # make sure caching is disabled for all child plugins
+        # of the salesforce forms instance
+        for plugin in instance.child_plugin_instances:
+            plugin.get_plugin_class().cache = True
+
         request = context['request']
         context = super(SalesforceForm, self).render(context, instance, placeholder)
         context['action_url'] = getattr(
