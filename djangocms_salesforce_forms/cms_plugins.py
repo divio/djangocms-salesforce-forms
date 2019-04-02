@@ -5,7 +5,6 @@ from django.conf.urls import url
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 
 from aldryn_forms.cms_plugins import FormPlugin
