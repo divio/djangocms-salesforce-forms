@@ -56,10 +56,10 @@ class SalesforceForm(FormPlugin):
         return [plugin for plugin in plugin_types if plugin not in cls.unsupported_fields]
 
     def render(self, context, instance, placeholder):
-        # monkeypatch aldryn forms to enable caching for all
-        # nested plugins once a salesforce form is present
-        import aldryn_forms.cms_plugins
-        aldryn_forms.cms_plugins.FormElement.cache = True
+        # make sure caching is disabled for all child plugins
+        # of the salesforce forms instance
+        for plugin in instance.child_plugin_instances:
+            plugin.get_plugin_class().cache = True
 
         request = context['request']
         context = super(SalesforceForm, self).render(context, instance, placeholder)
