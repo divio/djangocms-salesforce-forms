@@ -79,8 +79,6 @@
             var data = form.serializeArray();
             var message_element = $("#message-{{ instance.pk }}");
 
-            data.push({name: "csrfmiddlewaretoken", value: "{{ csrf_token }}"});
-
             $.ajax({
                 url: "{% url 'admin:djangocms-salesforce-form-submit' %}",
                 method: "POST",

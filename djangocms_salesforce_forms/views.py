@@ -4,8 +4,10 @@ import requests
 
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 def djangocms_salesforce_form_submit(request):
     if request.method != 'POST':
         return JsonResponse({'message': 'Method now allowed'}, status=405)
