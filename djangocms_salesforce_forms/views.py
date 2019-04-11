@@ -4,11 +4,13 @@ import requests
 
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 def djangocms_salesforce_form_submit(request):
     if request.method != 'POST':
-        return JsonResponse({'message': 'Method now allowed'}, status=405)
+        return JsonResponse({'message': 'Method not allowed'}, status=405)
 
     url = getattr(settings, 'DJANGOCMS_SALESFORCE_FORMS_DE_MANAGER_URL', 'https://cl.exct.net/DEManager.aspx')
     salesforce_post_data = request.POST.dict()
